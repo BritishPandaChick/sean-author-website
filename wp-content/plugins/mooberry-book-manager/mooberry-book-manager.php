@@ -6,7 +6,7 @@
   *  Author: Mooberry Dreams
   *  Author URI: http://www.mooberrydreams.com/
   *  Donate Link: https://www.paypal.me/mooberrydreams/
-  *  Version: 4.1.1
+  *  Version: 4.1.6
   *  Text Domain: mooberry-book-manager
   *  Domain Path: languages
   *
@@ -27,7 +27,7 @@
   *
   * @package MBDB
   * @author Mooberry Dreams
-  * @version 4.1.1
+  * @version 4.1.6
   */
   
  // Exit if accessed directly
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  //error_log('starting');
 // Plugin version
 if ( ! defined( 'MBDB_PLUGIN_VERSION' ) ) {
-	define( 'MBDB_PLUGIN_VERSION', '4.1.1' );
+	define( 'MBDB_PLUGIN_VERSION', '4.1.6' );
 }
 
 if ( ! defined( 'MBDB_PLUGIN_VERSION_KEY' ) ) {
@@ -160,8 +160,8 @@ final class Mooberry_Book_Manager {
 			
 			//self::$instance->book_CPT = new Mooberry_Book_Manager_Book_CPT();
 			
-			$book_CPT = new Mooberry_Book_Manager_Book_CPT();
-			
+			self::$instance->book_CPT = apply_filters( 'mbdb_book_cpt_obj', new Mooberry_Book_Manager_Book_CPT() );
+
 			self::$instance->grid_factory = apply_filters( 'mbdb_grid_factory', new Mooberry_Book_Manager_Simple_Grid_Factory() );
 			
 			self::$instance->book_grid_CPT = new Mooberry_Book_Manager_Book_Grid_CPT(  );
@@ -442,10 +442,11 @@ add_filter('wp_nav_menu_objects',  'remove_tax_grid_page_from_menu' , 99, 2);
 	$page_id = MBDB()->options->tax_grid_page;
     // remove the menu item that has a title of 'Uncategorized'
     foreach ($sorted_menu_objects as $key => $menu_object) {
-
         // can also check for $menu_object->url for example
         // see all properties to test against:
-         
+         if ( !isset( $menu_object ) || !property_exists( $menu_object, 'object_id') ) {
+	         continue;
+         }
         if ($menu_object->object_id == $page_id) {
             unset($sorted_menu_objects[$key]);
             break;
@@ -474,4 +475,6 @@ function remove_tax_grid_from_page_links( $args ) {
 		// $options['comments_on_books'] = false;
 		// update_option('mbdb_options', $options);
 // }
-	
+
+
+

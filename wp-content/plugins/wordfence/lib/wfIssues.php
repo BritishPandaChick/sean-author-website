@@ -22,6 +22,20 @@ class wfIssues {
 	
 	const STATUS_PAIDONLY = 'x';
 	
+	//Possible scan failure types
+	const SCAN_FAILED_GENERAL = 'general';
+	const SCAN_FAILED_TIMEOUT = 'timeout';
+	const SCAN_FAILED_DURATION_REACHED = 'duration';
+	const SCAN_FAILED_VERSION_CHANGE = 'versionchange';
+	const SCAN_FAILED_FORK_FAILED = 'forkfailed';
+	const SCAN_FAILED_CALLBACK_TEST_FAILED = 'callbackfailed';
+	const SCAN_FAILED_START_TIMEOUT = 'starttimeout';
+	
+	const SCAN_FAILED_API_SSL_UNAVAILABLE = 'sslunavailable';
+	const SCAN_FAILED_API_CALL_FAILED = 'apifailed';
+	const SCAN_FAILED_API_INVALID_RESPONSE = 'apiinvalid';
+	const SCAN_FAILED_API_ERROR_RESPONSE = 'apierror';
+	
 	private $db = false;
 
 	//Properties that are serialized on sleep:
@@ -34,6 +48,10 @@ class wfIssues {
 	public $totalCriticalIssues = 0;
 	public $totalWarningIssues = 0;
 	public $totalIgnoredIssues = 0;
+	
+	public static function validIssueTypes() {
+		return array('checkHowGetIPs', 'checkSpamIP', 'commentBadURL', 'configReadable', 'coreUnknown', 'database', 'diskSpace', 'dnsChange', 'easyPassword', 'file', 'geoipSupport', 'knownfile', 'optionBadURL', 'postBadTitle', 'postBadURL', 'publiclyAccessible', 'spamvertizeCheck', 'suspiciousAdminUsers', 'timelimit', 'wfPluginAbandoned', 'wfPluginRemoved', 'wfPluginUpgrade', 'wfPluginVulnerable', 'wfThemeUpgrade', 'wfUpgrade', 'wpscan_directoryList', 'wpscan_fullPathDiscl');
+	}
 	
 	public static function statusPrep(){
 		wfConfig::set_ser('wfStatusStartMsgs', array());
@@ -105,11 +123,47 @@ class wfIssues {
 	}
 	
 	/**
-	 * Returns false if the scan has not been detected as failing. If it has, it returns the timestamp of the last status update.
+	 * Returns false if the scan has not been detected as failed. If it has, returns a constant corresponding to the reason.
 	 * 
-	 * @return bool|int
+	 * @return bool|string
 	 */
 	public static function hasScanFailed() {
+		$lastStatusUpdate = self::lastScanStatusUpdate();
+		if ($lastStatusUpdate !== false && wfScanner::shared()->isRunning()) {
+			$threshold = WORDFENCE_SCAN_FAILURE_THRESHOLD;
+			if (time() - $lastStatusUpdate > $threshold) {
+				return self::SCAN_FAILED_TIMEOUT;
+			}
+		}
+		
+		$scanStartAttempt = wfConfig::get('scanStartAttempt', 0);
+		if ($scanStartAttempt && time() - $scanStartAttempt > WORDFENCE_SCAN_START_FAILURE_THRESHOLD) {
+			return self::SCAN_FAILED_START_TIMEOUT;
+		}
+		
+		$recordedFailure = wfConfig::get('lastScanFailureType');
+		switch ($recordedFailure) {
+			case self::SCAN_FAILED_GENERAL:
+			case self::SCAN_FAILED_DURATION_REACHED:
+			case self::SCAN_FAILED_VERSION_CHANGE:
+			case self::SCAN_FAILED_FORK_FAILED:
+			case self::SCAN_FAILED_CALLBACK_TEST_FAILED:
+			case self::SCAN_FAILED_API_SSL_UNAVAILABLE:
+			case self::SCAN_FAILED_API_CALL_FAILED:
+			case self::SCAN_FAILED_API_INVALID_RESPONSE:
+			case self::SCAN_FAILED_API_ERROR_RESPONSE:
+				return $recordedFailure;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Returns false if the scan has not been detected as timed out. If it has, it returns the timestamp of the last status update.
+	 *
+	 * @return bool|int
+	 */
+	public static function lastScanStatusUpdate() {
 		if (wfConfig::get('wf_scanLastStatusTime', 0) === 0) {
 			return false;
 		}
@@ -258,9 +312,13 @@ class wfIssues {
 	public function ignoreAllNew(){
 		$this->getDB()->queryWrite("update " . $this->issuesTable . " set status='ignoreC' where status='new'");
 	}
-	public function emailNewIssues($timeLimitReached = false){
+	public function emailNewIssues($timeLimitReached = false, $scanController = false){
 		$level = wfConfig::getAlertLevel();
 		$emails = wfConfig::getAlertEmails();
+		if (!count($emails)) {
+			return;
+		}
+		
 		$shortSiteURL = preg_replace('/^https?:\/\//i', '', site_url());
 		$subject = "[Wordfence Alert] Problems found on $shortSiteURL";
 
@@ -316,9 +374,13 @@ class wfIssues {
 			'issuesNotShown' => $overflowCount,
 			'adminURL' => get_admin_url(),
 			'timeLimitReached' => $timeLimitReached,
+			'scanController' => ($scanController ? $scanController : wfScanner::shared()),
 			));
 		
-		wp_mail(implode(',', $emails), $subject, $content, 'Content-type: text/html');
+		foreach ($emails as $email) {
+			$uniqueContent = str_replace('<!-- ##UNSUBSCRIBE## -->', sprintf(__('No longer an administrator for this site? <a href="%s" target="_blank">Click here</a> to stop receiving security alerts.', 'wordfence'), wfUtils::getSiteBaseURL() . '?_wfsf=removeAlertEmail&jwt=' . wfUtils::generateJWT(array('email' => $email))), $content);
+			wp_mail($email, $subject, $uniqueContent, 'Content-type: text/html');
+		}
 	}
 	public function deleteIssue($id){ 
 		$this->getDB()->queryWrite("delete from " . $this->issuesTable . " where id=%d", $id);
@@ -402,6 +464,9 @@ class wfIssues {
 					}
 				}
 				$issueList[$i]['issueIDX'] = $i;
+				if (isset($issueList[$i]['data']['cType'])) {
+					$issueList[$i]['data']['ucType'] = ucwords($issueList[$i]['data']['cType']);
+				}
 			}
 		}
 		return $ret; //array of lists of issues by status

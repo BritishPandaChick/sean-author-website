@@ -1,7 +1,9 @@
 <?php
 /**
+ * WPSEO plugin file.
+ *
  * @package WPSEO\Admin
- * @since      5.1
+ * @since   5.1
  */
 
 if ( ! defined( 'WPSEO_VERSION' ) ) {
@@ -108,7 +110,7 @@ $extensions->add(
 );
 
 // Add Yoast WooCommerce SEO when WooCommerce is active.
-if ( class_exists( 'Woocommerce' ) ) {
+if ( WPSEO_Utils::is_woocommerce_active() ) {
 	$extensions->add(
 		'wpseo-woocommerce',
 		new WPSEO_Extension(
@@ -161,15 +163,15 @@ $wpseo_extensions_header = sprintf( __( '%1$s Extensions', 'wordpress-seo' ), 'Y
 
 			<?php
 			if ( ! $extensions->is_activated( 'wordpress-seo-premium' ) ) :
-			?>
+				?>
 				<ul class="yoast-seo-premium-benefits yoast-list--usp">
 					<li class="yoast-seo-premium-benefits__item">
 						<span class="yoast-seo-premium-benefits__title"><?php esc_html_e( 'Redirect manager', 'wordpress-seo' ); ?></span>
 						<span class="yoast-seo-premium-benefits__description"><?php esc_html_e( 'create and manage redirects from within your WordPress install.', 'wordpress-seo' ); ?></span>
 					</li>
 					<li class="yoast-seo-premium-benefits__item">
-						<span class="yoast-seo-premium-benefits__title"><?php esc_html_e( 'Multiple focus keywords', 'wordpress-seo' ); ?></span>
-						<span class="yoast-seo-premium-benefits__description"><?php esc_html_e( 'optimize a single post for up to 5 keywords.', 'wordpress-seo' ); ?></span>
+						<span class="yoast-seo-premium-benefits__title"><?php esc_html_e( 'Synonyms & related keyphrases', 'wordpress-seo' ); ?></span>
+						<span class="yoast-seo-premium-benefits__description"><?php esc_html_e( 'optimize a single post for synonyms and related keyphrases.', 'wordpress-seo' ); ?></span>
 					</li>
 					<li class="yoast-seo-premium-benefits__item">
 						<span class="yoast-seo-premium-benefits__title"><?php esc_html_e( 'Social previews', 'wordpress-seo' ); ?></span>
@@ -195,7 +197,7 @@ $wpseo_extensions_header = sprintf( __( '%1$s Extensions', 'wordpress-seo' ), 'Y
 
 			<?php else : ?>
 
-				<a target="_blank" href="<?php WPSEO_Shortlinker::show( 'https://yoa.st/zz' ); ?>" class="yoast-button yoast-button--noarrow yoast-button-go-to yoast-button--extension yoast-button--extension-buy">
+				<a target="_blank" href="<?php WPSEO_Shortlinker::show( 'https://yoa.st/zz' ); ?>" class="yoast-button yoast-button--noarrow yoast-button--extension yoast-button--extension-buy">
 					<?php
 					/* translators: $1$s expands to Yoast SEO Premium */
 					printf( __( 'Buy %1$s', 'wordpress-seo' ), $extension->get_title() );
@@ -221,7 +223,6 @@ $wpseo_extensions_header = sprintf( __( '%1$s Extensions', 'wordpress-seo' ), 'Y
 			<h2><?php
 				/* translators: %1$s expands to Yoast SEO */
 				$yoast_seo_extensions = sprintf( __( '%1$s extensions', 'wordpress-seo' ), 'Yoast SEO' );
-
 				$yoast_seo_extensions = '<span class="yoast-heading-highlight">' . $yoast_seo_extensions . '</span>';
 
 				/* translators: %1$s expands to Yoast SEO extensions */
@@ -251,7 +252,7 @@ $wpseo_extensions_header = sprintf( __( '%1$s Extensions', 'wordpress-seo' ), 'Y
 								<a target="_blank" href="<?php WPSEO_Shortlinker::show( 'https://yoa.st/13i' ); ?>" class="yoast-link--license"><?php esc_html_e( 'Activate your site on My Yoast', 'wordpress-seo' ); ?></a>
 							<?php endif; ?>
 						<?php else : ?>
-							<a target="_blank" class="yoast-button yoast-button--noarrow yoast-button-go-to  yoast-button--extension yoast-button--extension-buy" href="<?php echo esc_url( $extension->get_buy_url() ); ?>">
+							<a target="_blank" class="yoast-button yoast-button--noarrow yoast-button--extension yoast-button--extension-buy" href="<?php echo esc_url( $extension->get_buy_url() ); ?>">
 								<?php /* translators: %s expands to the product name */ ?>
 								<?php printf( __( 'Buy %s', 'wordpress-seo' ), $extension->get_buy_button() ); ?>
 							</a>

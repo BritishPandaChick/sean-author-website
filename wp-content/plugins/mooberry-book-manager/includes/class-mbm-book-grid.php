@@ -500,6 +500,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 			
 			// only return results if are any so that headers of empty groups
 			// aren't displayed
+			$empty = '';
 			if (count($results)>0) {
 				switch ($groups[$level]) {
 					case 'genre':
@@ -520,7 +521,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 					case 'cover_artist':
 						$empty = apply_filters('mbdb_book_grid_uncategorized_heading', __('No Cover Artist Specified', 'mooberry-book-manager'));
 						break;
-				}	
+					default:
+						$taxonomy = get_taxonomy( 'mbdb_' . $groups[$level] );
+						$empty = sprintf(__('No %s Specified', 'mbm-custom-fields'), $taxonomy->labels->singular_name );
+				}
+				$empty = apply_filters( 'mbdb_book_grid_empty_tax_group_heading', $empty, $groups[$level] );
 				$books[ $empty] = $results;
 			}
 		//}
@@ -803,8 +808,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		$image_size = $this->wp_size;
 		$mbdb_book_grid_cover_height = $this->cover_height;
 		
-		
-		$content = '<span itemscope itemtype="http://schema.org/Book"  class="mbdb_float_grid" style="height: ' . ($mbdb_book_grid_cover_height + 50) . 'px; width: ' . $mbdb_book_grid_cover_height . 'px;">';
+		$extra_height = intval( apply_filters( 'mbdb_book_grid_additional_height', 50, $this ) );
+
+		$content = '<span itemscope itemtype="http://schema.org/Book"  class="mbdb_float_grid" style="height: ' . (intval($mbdb_book_grid_cover_height ) + $extra_height) . 'px; width: ' . $mbdb_book_grid_cover_height . 'px;">';
 		
 		$cover = $book->get_cover_url( $image_size, 'grid' );
 		
@@ -831,7 +837,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 		$content .= '<span class="mbdb_grid_title" itemprop="name">';
 		$content = apply_filters('mbdb_book_grid_pre_link', $content, $book->id, $book->title, $book);
 		$content .= '<a itemprop="mainEntityOfPage" class="mbm-book-grid-title-link" href="' . esc_url(get_permalink($book->id)) . '">' . esc_html($book->title) . '</a>';
-		$content = apply_filters('mbdb_book_grid_post_link', $content, $book->id, $book->title, $book);
+		$content = apply_filters('mbdb_book_grid_post_link', $content, $book->id, $book->title, $book );
 		$content .= '</span></span>';
 
 		return $content;

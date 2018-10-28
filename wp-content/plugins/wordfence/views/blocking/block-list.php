@@ -8,7 +8,7 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 <div class="wf-row">
 	<div class="wf-col-xs-12">
 		<div class="wf-flex-horizontal wf-flex-full-width wf-add-bottom-small">
-			<h3 class="wf-no-top wf-no-bottom"><?php printf(__('All blocks<span class="wf-hidden-xs"> for %s</span>', 'wordfence'), preg_replace('/^https?:\/\//i', '', wfUtils::wpSiteURL())); ?></h3>
+			<h3 class="wf-no-top wf-no-bottom"><?php printf(__('Current blocks<span class="wf-hidden-xs"> for %s</span>', 'wordfence'), preg_replace('/^https?:\/\//i', '', wfUtils::wpSiteURL())); ?></h3>
 			<div class="wf-right">
 				<div class="wf-inline-block">
 				<ul class="wf-option wf-option-toggled-boolean-switch wf-option-no-spacing" data-option="displayAutomaticBlocks" data-enabled-value="1" data-disabled-value="0" data-original-value="<?php echo wfConfig::get('displayAutomaticBlocks') ? 1 : 0; ?>">
@@ -28,11 +28,11 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 			<div class="wf-col-xs-12">
 				<div class="wf-block wf-block-no-header wf-active">
 					<div class="wf-block-content wf-padding-add-top-large wf-padding-add-bottom-large">
-						<ul class="wf-flex-horizontal wf-flex-vertical-xs wf-flex-full-width wf-no-top">
+						<ul class="wf-flex-horizontal wf-flex-vertical-xs wf-flex-full-width wf-flex-grow-all wf-no-top">
 							<li class="wf-padding-add-bottom-xs">
-								<ul class="wf-flex-horizontal wf-flex-full-width wf-no-top" style="display: none !important;">
-									<li><input type="text" placeholder="<?php esc_attr_e('Filter', 'wordfence'); ?>" id="wf-blocks-filter-field" class="wf-input-text"></li>
-									<li class="wf-padding-add-left-medium"><a href="#" id="wf-blocks-apply-filter" class="wf-btn wf-btn-callout wf-btn-default"><?php _e('Filter', 'wordfence'); ?></a></li>
+								<ul class="wf-flex-horizontal wf-flex-full-width wf-flex-grow-first wf-no-top">
+									<li><input type="text" placeholder="<?php esc_attr_e('Filter by Type, Detail, or Reason', 'wordfence'); ?>" id="wf-blocks-filter-field" class="wf-input-text"></li>
+									<li class="wf-padding-add-left-medium"><a href="#" id="wf-blocks-apply-filter" class="wf-btn wf-btn-callout wf-btn-default"><?php _e('Filter', 'wordfence'); ?></a>&nbsp;&nbsp;<a href="<?php echo wfSupportController::esc_supportURL(wfSupportController::ITEM_FIREWALL_BLOCKING_FILTER); ?>" target="_blank" rel="noopener noreferrer" class="wf-inline-help"><i class="wf-fa wf-fa-question-circle-o" aria-hidden="true"></i></a></li>
 								</ul>
 							</li>
 							<li class="wf-right wf-flex-vertical-xs">
@@ -101,7 +101,7 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 		<td data-column="type" data-sort="${typeSort}">${typeDisplay}</td>
 		<td data-column="detail" data-sort="${detailSort}">${detailDisplay}{{if (editable)}}&nbsp;<a href="#" class="wf-block-edit" data-edit-type="${editType}" data-edit-values="${editValues}"><i class="wf-ion-edit" aria-hidden="true"></i></a>{{/if}}</td>
 		<td data-column="ruleAdded" data-sort="${ruleAddedSort}">${ruleAddedDisplay}</td>
-		<td data-column="reason" data-sort="${reasonSort}" class="wf-split-word">${reasonDisplay}</td>
+		<td data-column="reason" data-sort="${reasonSort}">${reasonDisplay}</td>
 		<td data-column="expiration" data-sort="${expirationSort}">${expirationDisplay}</td>
 		<td data-column="blockCount" data-sort="${blockCountSort}">${blockCountDisplay}</td>
 		<td data-column="lastAttempt" data-sort="${lastAttemptSort}">${lastAttemptDisplay}</td>
@@ -277,6 +277,14 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 						}
 					});
 					
+					var reasonDisplayChunks = payload['blocks'][i]['reasonDisplay'].split(/\s+/);
+					for (var n = 0; n < reasonDisplayChunks.length; n++) {
+						if (reasonDisplayChunks[n].length >= 50) {
+							row.find('[data-column="reason"]').addClass('wf-split-word');
+							break;
+						}
+					}
+					
 					var existing = table.find('tbody tr[data-id="' + payload['blocks'][i]['id'] + '"]');
 					if (existing.length > 0) {
 						existing.replaceWith(row);
@@ -295,7 +303,7 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 			}
 			
 			if (table.find('.wf-blocks-columns > .wf-sortable.wf-sorted-ascending, .wf-blocks-columns > .wf-sortable.wf-sorted-descending').length == 0) {
-				table.find('thead > .wf-blocks-columns > .wf-sortable[data-column="type"]').trigger('click', [true]);
+				table.find('thead > .wf-blocks-columns > .wf-sortable[data-column="ruleAdded"]').addClass('wf-sorted-ascending').trigger('click', [true]);
 			}
 
 			$(window).trigger('wordfenceUpdateBlockButtons');
@@ -338,8 +346,9 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 		});
 		
 		$(function() {
-			WFAD.sortColumn = 'type';
-			WFAD.sortDirection = 'ascending';
+			WFAD.sortColumn = 'ruleAdded';
+			WFAD.sortDirection = 'descending';
+			
 			$(window).trigger('wordfenceRefreshBlockList', [{blocks: [], loading: true}, false]);
 			$(window).trigger('wordfenceLoadBlocks', [true]);
 
@@ -363,17 +372,19 @@ if (!defined('WORDFENCE_VERSION')) { exit; }
 					$('#wf-blocks-apply-filter').trigger('click');
 					return false;
 				}
-			}).on('keyup', function(e) {
-				var currentValue = $('#wf-blocks-filter-field').val() || '';
-				if (!WFAD.blocksFilter) {
-					$('#wf-blocks-apply-filter').text('<?php _e('Filter', 'wordfence'); ?>').data('filterMode', '');
-				}
-				else if (currentValue == '' || currentValue == WFAD.blocksFilter) {
-					$('#wf-blocks-apply-filter').text('<?php _e('Clear Filter', 'wordfence'); ?>').data('filterMode', 'filtered');
-				}
-				else {
-					$('#wf-blocks-apply-filter').text('<?php _e('Change Filter', 'wordfence'); ?>').data('filterMode', 'pendingChange');
-				}
+			}).on('change paste keyup', function() {
+				setTimeout(function() {
+					var currentValue = $('#wf-blocks-filter-field').val() || '';
+					if (!WFAD.blocksFilter) {
+						$('#wf-blocks-apply-filter').text('<?php _e('Filter', 'wordfence'); ?>').data('filterMode', '');
+					}
+					else if (currentValue == '' || currentValue == WFAD.blocksFilter) {
+						$('#wf-blocks-apply-filter').text('<?php _e('Clear Filter', 'wordfence'); ?>').data('filterMode', 'filtered');
+					}
+					else {
+						$('#wf-blocks-apply-filter').text('<?php _e('Change Filter', 'wordfence'); ?>').data('filterMode', 'pendingChange');
+					}
+				}, 4);
 			});
 			
 			$('#wf-blocks-apply-filter').on('click', function(e) {

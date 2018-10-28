@@ -16,7 +16,9 @@
  * @since    4.0.0
  */
 class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
-		
+
+	protected $standard_taxonomies;
+
 	public function __construct() {
 		
 		// initialize
@@ -26,7 +28,8 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 		$this->singular_name = __('Book', 'mooberry-book-manager');
 		$this->plural_name = __('Books', 'mooberry-book-manager');
 		$this->default_single_template = MBDB()->options->book_page_template;
-		
+
+
 		$this->set_up_taxonomies();
 		
 		$this->args = array(
@@ -46,7 +49,8 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 
 		// support Duplicate Post
 		add_action( 'dp_duplicate_post', array( $this, 'duplicate_book'), 10, 2 );
-		
+
+
 		add_filter('wp_head', array($this, 'meta_tags') );
 		if ( MBDB()->options->override_wpseo( 'og' ) ) {
 			add_filter('wpseo_opengraph_title', array( $this, 'override_wp_seo_meta') );
@@ -105,8 +109,25 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 		add_shortcode( 'book_kindle_preview', array( $this, 'shortcode_kindle_preview') );
 
 	}
-	
+
+
+    public function get_taxonomies() {
+        return $this->taxonomies;
+    }
+
+    public function get_standard_taxonomies() {
+	    return $this->standard_taxonomies;
+    }
+
+    public function get_custom_taxonomies() {
+        return array_diff_key( array_keys( $this->taxonomies ), $this->standard_taxonomies );
+	}
+
+
+
 	private function set_up_taxonomies() {
+	    $this->standard_taxonomies = array( 'mbdb_genre', 'mbdb_tag', 'mbdb_series', 'mbdb_illustrator', 'mbdb_cover_artist', 'mbdb_editor');
+
 		$tax_args =  array(
 					'meta_box_cb' => 'post_categories_meta_box',
 					'capabilities' => array( 
@@ -215,7 +236,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 									'-1'		=>	__('— No Publisher —', 'mooberry-book-manager'),
 								) + $publishers;
 		
-		$this->bulk_edit_fields = apply_filters('mbdb_book_bulk_edit_felds', array(
+		$this->bulk_edit_fields = apply_filters('mbdb_book_bulk_edit_fields', array(
 					'_mbdb_publisherID'	=>	array(
 							'fieldset_class' => 'inline-edit-col-left',
 							'fieldset_style' => '',
@@ -226,7 +247,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 					)
 				);
 		
-		$this->quick_edit_fields = apply_filters('mbdb_book_quick_edit_felds', array(
+		$this->quick_edit_fields = apply_filters('mbdb_book_quick_edit_fields', array(
 					'_mbdb_publisherID'	=>	array(
 							'fieldset_class' => 'inline-edit-col-left',
 							'fieldset_style' => '',
@@ -249,6 +270,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 							'description' => '',
 							),
 					)
+
 				);
 		
 		
@@ -1078,7 +1100,8 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 				  $taxonomy = get_taxonomy( $tax );
 				 
 				  //if( !$taxonomy->hierarchical ) {
-					if ( in_array($taxonomy->name, array('mbdb_genre', 'mbdb_series', 'mbdb_cover_artist', 'mbdb_tag', 'mbdb_editor', 'mbdb_illustrator'))) {
+					//
+                    if ( in_array($taxonomy->name, array_keys($this->taxonomies ) ) ) { //array('mbdb_genre', 'mbdb_series', 'mbdb_cover_artist', 'mbdb_tag', 'mbdb_editor', 'mbdb_illustrator'))) {
 						
 					 // $terms = array_map( 'intval', array_filter( $terms ) );
 					 $term_names = array();
@@ -1103,38 +1126,60 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 	 *  DISPLAY EDIT PAGE
 	 *  
 	 **********************************************************/
+
+	protected function get_taxonomies_on_top() {
+
+		$taxonomies = array();
+
+		$custom_taxonomies = $this->get_custom_taxonomies();
+		foreach ( $custom_taxonomies as $custom_taxonomy ) {
+			$taxonomies[] = 'tagsdiv-' . $custom_taxonomy;
+		}
+
+		return array_merge( $taxonomies ,  array( 'tagsdiv-mbdb_tag', 'tagsdiv-mbdb_series', 'tagsdiv-mbdb_genre' ) );
+	}
+
+	protected function get_taxonomies_on_bottom() {
+		return array( 'tagsdiv-mbdb_cover_artist', 'tagsdiv-mbdb_illustrator', 'tagsdiv-mbdb_editor' );
+	}
+
 	function reorder_taxonomy_boxes() {
 	
 		global $wp_meta_boxes;
 		
-		$taxonomies = array(  'tagsdiv-mbdb_tag', 'tagsdiv-mbdb_series', 'tagsdiv-mbdb_genre' );
-		
+
+		$taxonomies = $this->get_taxonomies_on_top();
+
 		// remove the cover to be readded before the taxonomies
 		$cover = $wp_meta_boxes['mbdb_book']['side']['default']['mbdb_cover_image_metabox'];
 		unset( $wp_meta_boxes['mbdb_book']['side']['default']['mbdb_cover_image_metabox'] );
 		
 		foreach ( $taxonomies as $taxID ) {
-			 $tax = $wp_meta_boxes['mbdb_book']['side']['core'][$taxID];
-			 unset( $wp_meta_boxes['mbdb_book']['side']['core'][$taxID] );
-			 
-			 if (array_key_exists('default', $wp_meta_boxes['mbdb_book']['side'])) {
-				$wp_meta_boxes['mbdb_book']['side']['default'] = array( $taxID => $tax ) + $wp_meta_boxes['mbdb_book']['side']['default'];
-			 } else {
-				$wp_meta_boxes['mbdb_book']['side']['default'] = array( $taxID => $tax );
-			 }
+			if ( isset( $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ] ) ) {
+				$tax = $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ];
+				unset( $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ] );
+
+				if ( array_key_exists( 'default', $wp_meta_boxes['mbdb_book']['side'] ) ) {
+					$wp_meta_boxes['mbdb_book']['side']['default'] = array( $taxID => $tax ) + $wp_meta_boxes['mbdb_book']['side']['default'];
+				} else {
+					$wp_meta_boxes['mbdb_book']['side']['default'] = array( $taxID => $tax );
+				}
+			}
 		}
 
 		// move these to the bottom
-		$taxonomies = array( 'tagsdiv-mbdb_cover_artist', 'tagsdiv-mbdb_illustrator',  'tagsdiv-mbdb_editor');	
+		$taxonomies = $this->get_taxonomies_on_bottom();
 		foreach ($taxonomies as $taxID) {
-			 $tax = $wp_meta_boxes['mbdb_book']['side']['core'][$taxID];
-			 unset( $wp_meta_boxes['mbdb_book']['side']['core'][$taxID] );
-			 
-			 if (array_key_exists('low', $wp_meta_boxes['mbdb_book']['side'])) {
-				$wp_meta_boxes['mbdb_book']['side']['low'][$taxID] = $tax ;
-			 } else {
-				$wp_meta_boxes['mbdb_book']['side']['low'] = array( $taxID => $tax );
-			 }
+			if ( isset( $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ] ) ) {
+				$tax = $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ];
+				unset( $wp_meta_boxes['mbdb_book']['side']['core'][ $taxID ] );
+
+				if ( array_key_exists( 'low', $wp_meta_boxes['mbdb_book']['side'] ) ) {
+					$wp_meta_boxes['mbdb_book']['side']['low'][ $taxID ] = $tax;
+				} else {
+					$wp_meta_boxes['mbdb_book']['side']['low'] = array( $taxID => $tax );
+				}
+			}
 		}
 		
 		// now add cover above the taxonomies
@@ -1547,7 +1592,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 									'book' => ''), $attr);	
 		$this->set_book( $attr[ 'book' ] );
 		
-		if ( $this->data_object->release_date == '' ) {
+		if ( !$this->data_object->has_published_date() ) {
 			return $this->output_blank_data( 'published', $attr[ 'blank' ] );
 		}
 		//error_log('published');
@@ -1564,7 +1609,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 				$format = get_option('date_format');
 				break;
 		}
-		if ( $this->data_object->release_date <= strtotime('now') ) {
+		if ( $this->data_object->is_published() ) {
 			$label = $attr['published_label'];
 		} else {
 			$label = $attr['unpublished_label'];
@@ -2283,7 +2328,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 				$book_page_layout .= '[book_editions blank="" label="' . __('Editions:', 'mooberry-book-manager') . '" book="' . $book . '"]';
 			}
 		//error_log('goodreads');
-			if ( $this->data_object->gooreads != '' ) {
+			if ( $this->data_object->goodreads != '' ) {
 				$book_page_layout .= '[book_goodreads   book="' . $book . '"]';
 			}
 			//error_log('summary');
@@ -2298,7 +2343,7 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 		// below actually works. Otherwise, valid data could be "0" and still
 		// evaulate to false in the if statement
 		// also simplifies the following if statments
-		$is_published = $this->data_object->is_published();
+		$has_published_date = $this->data_object->has_published_date();
 		$is_publisher = $this->data_object->has_publisher();
 		$is_genre = $this->data_object->has_genres();
 		$is_tag = $this->data_object->has_tags();
@@ -2306,12 +2351,12 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 		$is_illustrator = $this->data_object->has_illustrators();
 		$is_cover_artist = $this->data_object->has_cover_artists();
 		
-		$display_details = apply_filters('mbdb_display_book_details', $is_published || $is_publisher || $is_genre || $is_tag || $is_editor || $is_illustrator || $is_cover_artist);
+		$display_details = apply_filters('mbdb_display_book_details', $has_published_date || $is_publisher || $is_genre || $is_tag || $is_editor || $is_illustrator || $is_cover_artist);
 		//error_log('start details');
 		if ($display_details ) {
 			$book_page_layout .= '<div class="mbm-book-details-outer">';
-							$book_page_layout .= '<div class="mbm-book-details">';
-			if ($is_published ) {
+			$book_page_layout .= '  <div class="mbm-book-details">';
+			if ($has_published_date ) {
 				//$book_page_layout .= '<span class="mbm-book-details-published-label">' . __('Published:', 'mooberry-book-manager') . '</span> <span class="mbm-book-details-published-data">[book_published format="default" blank="" book="' . $book . '"]</span><br/>';
 				$book_page_layout .= '<span class="mbm-book-details-published-data">[book_published format="default" blank="" book="' . $book . '"]</span><br/>';
 			}

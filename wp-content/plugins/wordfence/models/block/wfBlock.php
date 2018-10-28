@@ -65,7 +65,7 @@ class wfBlock {
 	 * @return string
 	 */
 	public static function blocksTable() {
-		return wfDB::networkPrefix() . 'wfBlocks7';
+		return wfDB::networkTable('wfBlocks7');
 	}
 	
 	/**
@@ -132,6 +132,22 @@ class wfBlock {
 			$forcedWhitelistEntry = false;
 		}
 		
+		if (
+			(defined('DOING_CRON') && DOING_CRON) || //Safe
+			(defined('WORDFENCE_SYNCING_ATTACK_DATA') && WORDFENCE_SYNCING_ATTACK_DATA) //Safe as long as it will actually run since it then exits
+		) {
+			$serverIPs = wfUtils::serverIPs();
+			foreach ($serverIPs as $testIP) {
+				if (wfUtils::inet_pton($IP) == wfUtils::inet_pton($testIP)) {
+					if ($forcedWhitelistEntry !== null) {
+						$forcedWhitelistEntry = true;
+					}
+					
+					return true;
+				}
+			}
+		}
+		
 		foreach (wfUtils::getIPWhitelist() as $subnet) {
 			if ($subnet instanceof wfUserIPRange) {
 				if ($subnet->isIPInRange($IP)) {
@@ -161,7 +177,7 @@ class wfBlock {
 		
 		if ($payload['type'] == 'ip-address') {
 			if (!isset($payload['ip']) || !filter_var(trim($payload['ip']), FILTER_VALIDATE_IP) || @wfUtils::inet_pton(trim($payload['ip'])) === false) { return __('Invalid IP address.', 'wordfence'); }
-			if (self::isWhitelisted(trim($payload['ip']))) { return __('This IP address is in a range of addresses that Wordfence does not block. The IP range may be internal or belong to a service that is safe to allow.', 'wordfence'); }
+			if (self::isWhitelisted(trim($payload['ip']))) { return sprintf(__('This IP address is in a range of addresses that Wordfence does not block. The IP range may be internal or belong to a service that is always allowed. Whitelisting of external services can be disabled. <a href="%s" target="_blank" rel="noopener noreferrer">Learn More</a>', 'wordfence'), wfSupportController::supportURL(wfSupportController::ITEM_FIREWALL_WAF_OPTION_WHITELISTED_SERVICES)); }
 		}
 		else if ($payload['type'] == 'country') {
 			if (!isset($payload['blockLogin']) || !isset($payload['blockSite'])) { return __('Nothing selected to block.', 'wordfence'); }
@@ -633,46 +649,6 @@ class wfBlock {
 			$columns = '*';
 		}
 		
-		$filter = trim($filter);
-		$filterClause = '';
-		if (!empty($filter)) {
-			if (wfUtils::isValidIP($filter)) { //e.g., 4.5.6.7, ffe0::, ::0
-				$filterClause = '(`IP` = \'' . esc_sql(wfUtils::inet_pton($filter)) . '\' OR `parameters` LIKE \'%' . esc_sql(wfUtils::inet_ntop(wfUtils::inet_pton($filter))) . '%\') AND ';
-			}
-			else if (strpos($filter, '*') !== false && preg_match('/^(?:\d+\.)(?:\d+\.|\*\.){1,2}(?:\d+|\*)?$/', $filter)) { //e.g., 4.5.*
-				$components = explode('.', $filter);
-				$regex = '^00000000000000000000FFFF';
-				for ($i = 0; $i < 4; $i++) {
-					if (isset($components[$i]) && $components[$i] != '*') {
-						$regex .= strtoupper(str_pad(dechex($components[$i]), 2, '0', STR_PAD_LEFT));
-					}
-					else {
-						$regex .= '..';
-					}
-				}
-				$regex .= '$';
-				$filterClause = 'HEX(`IP`) REGEXP \'' . $regex . '\' AND ';
-			}
-			else if (strpos($filter, '*') !== false && preg_match('/^(?:[0-9a-f]+:)(?:[0-9a-f]+:|\*:){1,2}(?:[0-9a-f]+|\*)?$/i', $filter)) { //e.g., ffe0:*
-				$components = explode(':', $filter);
-				$regex = '^';
-				for ($i = 0; $i < 4; $i++) {
-					if (isset($components[$i])) {
-						$regex .= strtoupper(str_pad(dechex($components[$i]), 4, '0', STR_PAD_LEFT));
-					}
-					else {
-						$regex .= '....';
-					}
-				}
-				$regex .= '$';
-				$filterClause = 'HEX(`IP`) REGEXP \'' . $regex . '\' AND ';
-			}
-			else {
-				$escapedFilter = esc_sql($filter);
-				$filterClause = '(`reason` LIKE \'%' . $escapedFilter . '%\' OR `parameters` LIKE \'%' . $escapedFilter . '%\') AND ';
-			}
-		}
-		
 		$sort = 'typeSort';
 		switch ($sortColumn) { //Match the display table column to the corresponding schema column
 			case 'type':
@@ -706,13 +682,13 @@ class wfBlock {
 		$query = "SELECT {$columns}, CASE 
 WHEN `type` = " . self::TYPE_COUNTRY . " THEN 0
 WHEN `type` = " . self::TYPE_PATTERN . " THEN 1
-WHEN `type` = " . self::TYPE_IP_MANUAL . " THEN 2
-WHEN `type` = " . self::TYPE_IP_AUTOMATIC_PERMANENT . " THEN 3
+WHEN `type` = " . self::TYPE_LOCKOUT . " THEN 2
+WHEN `type` = " . self::TYPE_RATE_THROTTLE . " THEN 3
 WHEN `type` = " . self::TYPE_RATE_BLOCK . " THEN 4
-WHEN `type` = " . self::TYPE_RATE_THROTTLE . " THEN 5
-WHEN `type` = " . self::TYPE_LOCKOUT . " THEN 6
+WHEN `type` = " . self::TYPE_IP_AUTOMATIC_PERMANENT . " THEN 5
+WHEN `type` = " . self::TYPE_IP_AUTOMATIC_TEMPORARY . " THEN 6
 WHEN `type` = " . self::TYPE_WFSN_TEMPORARY . " THEN 7
-WHEN `type` = " . self::TYPE_IP_AUTOMATIC_TEMPORARY . " THEN 8
+WHEN `type` = " . self::TYPE_IP_MANUAL . " THEN 8
 ELSE 9999
 END AS `typeSort`, CASE 
 WHEN `type` = " . self::TYPE_COUNTRY . " THEN `parameters`
@@ -726,7 +702,7 @@ WHEN `type` = " . self::TYPE_WFSN_TEMPORARY . " THEN `IP`
 WHEN `type` = " . self::TYPE_IP_AUTOMATIC_TEMPORARY . " THEN `IP`
 ELSE 9999
 END AS `detailSort`
- FROM `{$blocksTable}` WHERE {$filterClause}";
+ FROM `{$blocksTable}` WHERE ";
 		if (!empty($ofTypes)) {
 			$sanitizedTypes = array_map('intval', $ofTypes);
 			$query .= "`type` IN (" . implode(', ', $sanitizedTypes) . ') AND ';
@@ -763,6 +739,142 @@ END AS `detailSort`
 		}
 		
 		return $result;
+	}
+	
+	/**
+	 * Functions identically to wfBlock::allBlocks except that it filters the result. The filtering is done within PHP rather than MySQL, so this will impose a performance penalty and should only
+	 * be used when filtering is actually wanted.
+	 * 
+	 * @param bool $prefetch
+	 * @param array $ofTypes
+	 * @param int $offset
+	 * @param int $limit
+	 * @param string $sortColumn
+	 * @param string $sortDirection
+	 * @param string $filter
+	 * @return wfBlock[]
+	 */
+	public static function filteredBlocks($prefetch = false, $ofTypes = array(), $offset = 0, $limit = -1, $sortColumn = 'type', $sortDirection = 'ascending', $filter = '') {
+		$filter = trim($filter);
+		$matchType = '';
+		$matchValue = '';
+		if (empty($filter)) {
+			return self::allBlocks($prefetch, $ofTypes, $offset, $limit, $sortColumn, $sortDirection);
+		}
+		else if (wfUtils::isValidIP($filter)) { //e.g., 4.5.6.7, ffe0::, ::0
+			$matchType = 'ip';
+			$matchValue = wfUtils::inet_ntop(wfUtils::inet_pton($filter));
+		}
+		
+		if (empty($matchType) && preg_match('/^(?:[0-9]+|\*)\.(?:(?:[0-9]+|\*)\.(?!$))*(?:(?:[0-9]+|\*))?$/', trim($filter, '.'))) { //e.g., possible wildcard IPv4 like 4.5.*
+			$components = explode('.', trim($filter, '.'));
+			if (count($components) <= 4) {
+				$components = array_pad($components, 4, '*');
+				$matchType = 'ipregex';
+				$matchValue = '^';
+				foreach ($components as $c) {
+					if (empty($c) || $c == '*') {
+						$matchValue .= '\d+';
+					}
+					else {
+						$matchValue .= (int) $c;
+					}
+					
+					$matchValue .= '\.';
+				}
+				$matchValue = substr($matchValue, 0, -2);
+				$matchValue .= '$';
+			}
+		}
+		
+		if (empty($matchType) && preg_match('/^(?:[0-9a-f]+\:)(?:[0-9a-f]+\:|\*){1,2}(?:[0-9a-f]+|\*)?$/i', $filter)) { //e.g., possible wildcard IPv6 like ffe0:*
+			$components = explode(':', $filter);
+			$matchType = 'ipregex';
+			$matchValue = '^';
+			for ($i = 0; $i < 4; $i++) {
+				if (isset($components[$i])) {
+					$matchValue .= strtoupper(str_pad(dechex($components[$i]), 4, '0', STR_PAD_LEFT));
+				}
+				else {
+					$matchValue .= '[0-9a-f]{4}';
+				}
+				$matchValue .= ':';
+			}
+			$matchValue = substr($matchValue, 0, -1);
+			$matchValue .= '$';
+		}
+		
+		if (empty($matchType)) {
+			$matchType = 'literal';
+			$matchValue = $filter;
+		}
+		
+		$offsetProcessed = 0;
+		$limitProcessed = 0;
+		
+		$returnBlocks = array();
+		for ($i = 0; true; $i += WORDFENCE_BLOCKED_IPS_PER_PAGE) {
+			$blocks = wfBlock::allBlocks(true, $ofTypes, $i, WORDFENCE_BLOCKED_IPS_PER_PAGE, $sortColumn, $sortDirection);
+			if (empty($blocks)) {
+				break;
+			}
+			
+			foreach ($blocks as $b) {
+				$include = false;
+				
+				if (stripos($b->reason, $filter) !== false) {
+					$include = true;
+				}
+				
+				if (!$include && $b->type == self::TYPE_PATTERN) {
+					if (stripos($b->hostname, $filter) !== false) { $include = true; }
+					else if (stripos($b->userAgent, $filter) !== false) { $include = true; }
+					else if (stripos($b->referrer, $filter) !== false) { $include = true; }
+					else if (stripos($b->ipRange, $filter) !== false) { $include = true; }
+				}
+				
+				if (!$include && stripos(self::nameForType($b->type), $filter) !== false) {
+					$include = true;
+				}
+				
+				if (!$include) {
+					switch ($matchType) {
+						case 'ip':
+							if ($b->matchRequest($matchValue, '', '') != self::MATCH_NONE) {
+								$include = true;
+							}
+							else if ($b->type == self::TYPE_LOCKOUT && wfUtils::inet_pton($matchValue) == wfUtils::inet_pton($b->ip)) {
+								$include = true;
+							}
+							break;
+						case 'ipregex':
+							if (preg_match('/' . $matchValue . '/i', $b->ip)) {
+								$include = true;
+							}
+							break;
+						case 'literal':
+							//Already checked above
+							break;
+					}
+				}
+				
+				if ($include) {
+					if ($offsetProcessed < $offset) { //Still searching for the start offset
+						$offsetProcessed++;
+						continue;
+					}
+					
+					$returnBlocks[] = $b;
+					$limitProcessed++;
+				}
+				
+				if ($limit != -1 && $limitProcessed >= $limit) {
+					return $returnBlocks;
+				}
+			}
+		}
+		
+		return $returnBlocks;
 	}
 	
 	/**
@@ -1198,13 +1310,18 @@ END AS `detailSort`
 				if ($this->_shouldBypassCountryBlocking()) { //Has valid bypass cookie
 					return self::MATCH_NONE;
 				}
-				else if (!$this->blockLogin && $this->_isAuthRequest()) { //Not blocking login and this is a login request
+				
+				if ($this->blockLogin) {
+					add_filter('authenticate', array($this, '_checkForBlockedCountryFilter'), 1, 1);
+				}
+				
+				if (!$this->blockLogin && $this->_isAuthRequest()) { //Not blocking login and this is a login request
 					return self::MATCH_NONE;
 				}
-				else if (!$this->blockSite && !$this->_isAuthRequest()) { //Not blocking site and this is a site request
+				else if (!$this->blockSite && !$this->_isAuthRequest()) { //Not blocking site and this may be a site request
 					return self::MATCH_NONE;
 				}
-				else if (is_user_logged_in() && !wfConfig::get('cbl_loggedInBlocked', false)) { //Not blocking logged in users and a user is
+				else if (is_user_logged_in() && !wfConfig::get('cbl_loggedInBlocked', false)) { //Not blocking logged in users and a login session exists
 					return self::MATCH_NONE;
 				}
 				
@@ -1214,11 +1331,8 @@ END AS `detailSort`
 				}
 				
 				//Block the login form itself and any attempt to authenticate
-				if ($this->blockLogin) {
-					add_filter('authenticate', array($this, '_checkForBlockedCountryFilter'), 1, 1);
-					if ($this->_isAuthRequest()) {
-						return $this->_checkForBlockedCountry();
-					}
+				if ($this->blockLogin && $this->_isAuthRequest()) {
+					return $this->_checkForBlockedCountry();
 				}
 				
 				//Block requests that aren't to the login page, xmlrpc.php, or a user already logged in

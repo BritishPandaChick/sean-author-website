@@ -5,8 +5,8 @@ License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl.html
 Tags: SEO, XML sitemap, Google Search Console, Content analysis, Readability
 Requires at least: 4.8
-Tested up to: 4.9.4
-Stable tag: 7.1
+Tested up to: 4.9.8
+Stable tag: 9.0.2
 Requires PHP: 5.2.4
 
 Improve your WordPress SEO: Write better content and have a fully optimized WordPress site using the Yoast SEO plugin.
@@ -15,7 +15,7 @@ Improve your WordPress SEO: Write better content and have a fully optimized Word
 
 ### Yoast SEO: the #1 WordPress SEO plugin
 
-Need an SEO plugin that helps you reach for the stars? Yoast SEO is the original WordPress SEO plugin since 2008. It is the favorite tool of millions of users, ranging from the bakery around the corner to some of the most popular sites on the planet. With Yoast SEO, you get a solid toolset that helps you aim for that number one spot in the search results. Yoast: SEO for everyone.
+Need some help with your search engine optimization? Need an SEO plugin that helps you reach for the stars? Yoast SEO is the original WordPress SEO plugin since 2008. It is the favorite tool of millions of users, ranging from the bakery around the corner to some of the most popular sites on the planet. With Yoast SEO, you get a solid toolset that helps you aim for that number one spot in the search results. Yoast: SEO for everyone.
 
 Yoast SEO does everything in its power to please both visitors and search engine spiders. How? Below you’ll find a small sampling of the powers of Yoast SEO:
 
@@ -34,8 +34,8 @@ Yoast SEO does everything in its power to please both visitors and search engine
 
 * Content & SEO analysis: Invaluable tools to write SEO-friendly texts.
 * The snippet preview shows you how your post or page will look in the search results - even on mobile. Yoast SEO Premium even has social media previews!
-* **[Premium]** The Insights tool shows you what your text focuses on so you can keep your article in line with your keywords.
-* **[Premium]** Multiple focus keywords: Optimize your article for synonyms and related keywords.
+* **[Premium]** The Insights tool shows you what your text focuses on so you can keep your article in line with your keyphrases.
+* **[Premium]** Synonyms & related keyphrases: Optimize your article for synonyms and related keyphrases.
 * **[Premium]** Automatic internal linking suggestions: write your article and get automatic suggested posts to link to.
 
 #### Keep your site in perfect shape
@@ -52,7 +52,7 @@ Yoast SEO does everything in its power to please both visitors and search engine
 
 The Yoast team does not always provide active support for the Yoast SEO plugin on the WordPress.org forums, as we prioritize our email support. One-on-one email support is available to people who [bought Yoast SEO Premium](https://yoa.st/1v8) only.
 
-Note that the [Yoast SEO Premium](https://yoa.st/1v8) also has several extra features too, including the option to have multiple focus keywords, internal linking suggestions, cornerstone content checks and a redirect manager, so it is well worth your investment!
+Note that the [Yoast SEO Premium](https://yoa.st/1v8) also has several extra features too, including the option to have synonyms and related keyphrases, internal linking suggestions, cornerstone content checks and a redirect manager, so it is well worth your investment!
 
 You should also check out the [Yoast Local SEO](https://yoa.st/1uu), [Yoast News SEO](https://yoa.st/1uv) and [Yoast Video SEO](https://yoa.st/1uw) extensions to Yoast SEO. They work with the free version of Yoast SEO already, and these premium extensions of course come with support too.
 
@@ -62,7 +62,7 @@ Bug reports for Yoast SEO are [welcomed on GitHub](https://github.com/Yoast/word
 
 ### Further Reading
 
-For more info, check out the following articles:
+For more info on search engine optimization, check out the following:
 
 * The [Yoast SEO Plugin](https://yoa.st/1v8) official homepage.
 * The [Yoast SEO Knowledgebase](https://yoa.st/1va).
@@ -106,102 +106,78 @@ You'll find answers to many of your questions on [kb.yoast.com](https://yoa.st/1
 
 == Changelog ==
 
-= 7.1.0 =
-Release Date: March 20th, 2018
+= 9.0.2 =
+Release Date: October 24th, 2018
+
+Bugfixes:
+
+* Fixes a bug where it was impossible to change the profile in the Search Console integration step in the configuration wizard.
+* Fixes a bug where the primary taxonomy picker was not shown in Gutenberg (v4.1).
+
+= 9.0.1 =
+Release Date: October 23rd, 2018
+
+Bugfixes:
+
+* Fixes error with using `$` in wp-seo-admin-media.js. Now we use `jQuery` instead.
+
+= 9.0.0 =
+Release Date: October 23rd, 2018
+
+Bugfixes:
+
+* Fixes a bug where the keyword would not be found in the slug when containing punctuation, for example the keyphrase `apples & pears` in the slug `apples-pears`.
+* Fixes a bug where the buttons to change the How-to steps and FAQ questions order would be only partially visible in mobile view.
+* Fixes a bug where an 'undefined index' notice would be given when an OpenGraph image URL didn't have a correct path. Props to [@Julian-B90](https://github.com/Julian-B90)
+* Fixes a bug where the home description can contain HTML, resulting in unexpected characters on the Facebook social settings page.
+* Fixes a bug where author sitemap caches would be attempted to be invalidated despite not all conditions being met.
+* Fixes a bug where a fatal error on Yoast settings pages was thrown because they did not have a dedicated option class.
 
 Enhancements:
-* Adds a filter to mark Spanish sentences as non-passive when certain exception words occur between the auxiliary and the participle. The list of exception words includes all forms of the copula 'estar'.
-* Adds transition words assessment for Portuguese, props [amesdigital](https://github.com/amesdigital).
-* Increases the height of the meta description box so it matches the maximum amount of characters without needing a scrollbar.
-* Detects when you need to import old SEO plugin data and allows you to import it on the import plugins page. After importing you can check whether the import was completed successfully and then delete the data.
-* Changes the formatting of text in the dashboard widget to improve the reading experience.
-* Adds an extra argument to `wpseo_replacements` filter. This makes it possible to access post, taxonomy or term instances when applying the filter.
-* Adds support for a new template variable `%%archive_title%%`.
-* Remove all Facebook Insights functionality as it's no longer supported.
+
+* Introduces two new principles for keyword recognition:
+  * Makes keyphrase recognition flexible with regards to word order. This means that the keyphrase `SEO WordPress plugin` will be found in the sentence `This is the most popular SEO plugin for WordPress.` In order to use exact matches, the keyphrase can be enclosed in quotation marks.
+  * When matching keyphrases for the various assessments, the analysis only targets content words and ignores function words (e.g., `the` or `and`). This functionality is available in English, German, Dutch, French, Spanish, Italian, Portuguese, Russian and Polish.
+* The analysis of the following assessments incorporates the new keyword recognition principles:
+  * Image alt attributes: checks whether there’s at least one image with an alt tag that contains words from the keyphrase. An exact match isn’t required anymore.
+  * Keyphrase in introduction: checks whether words from the keyphrase are matched within one sentence in the introduction or, if not, whether they are present in the first paragraph at all. An exact match isn’t required anymore.
+  * Keyphrase in title: still checks whether an exact match of the keyphrase is found in (the beginning of) the title, but now also recommends improvement if all words from the keyphrase are found in the title.
+  * Keyphrase length: has new boundaries to check whether the keyphrase is not too long. For languages that have support for function word stripping (see above), only content words are taken into account.
+  * Keyphrase in meta description: checks how often all words from the keyphrase are matched within the meta description.
+  * Keyphrase in subheading: now checks whether at least one subheading contains more than half of the words from the keyphrase. An exact match isn’t required anymore.
+  * Keyphrase in slug: checks whether a sufficient number of words from the keyphrase is used in the slug. The number of words required depends on the length of the keyphrase.
+  * Keyphrase density: checks whether there are enough keyphrase matches; a match is defined as a sentence that contains all words from the keyphrase.
+  * Link focus keyphrase: the assessment that checks whether you’re using your keyphrase to link to a different article doesn't require an exact match anymore.
+* Improves the feedback texts for all SEO and readability assessments.
+* Improves the consistency of the SEO and readability results by showing them in a fixed order.
+* Adds target="_blank" to the "How to connect to GSC" link to open the link a new tab. Props to [@zkan](https://github.com/zkan)
+* Changes all mentions of 'keyword' to 'keyphrase'. Read more about [the transition from 'keyword' to 'keyphrase'](https://yoa.st/keyword-to-keyphrase).
+* Optimizes and caches WPSEO_Option_Titles::enrich_defaults(). Props to [@soulseekah](https://github.com/soulseekah)
+* Introduces a Features tab in the network admin, which allows disabling all site-specific features for the entire network.
+* Improves the tab order within the structured data blocks in Gutenberg and make it consistent between the FAQ and How-To block.
+* Improves sitemap performance by disabling the caching by default.
+* Adds `target="_blank"` to the "How to connect to GSC" link to open a new tab when clicked.
+* Adds an assessment that checks whether your keyword consists only of function words.
+* Changes OpenGraph image handling to always use an image from the media library. This makes the performance of the OpenGraph image handling much better.
+* Improves performance by no longer using images from the content as a fallback for the OpenGraph and Twitter images.
+
+Other:
+
+* Deprecates the WPSEO_Cornerstone class.
+* Deprecates the assessment that checks if stopwords are used within the keyphrase.
+
+= 8.4.0 =
+Release Date: October 9th, 2018
 
 Bugfixes:
-* Fixes a bug that broke a filter which marks Spanish and French sentences as non-passive when certain exception words occur between the auxiliary and the participle.
-* Fixes a bug where the `page` and `paged` values could cause errors if they weren't properly handled as integers.
-* Fixes a bug where division by zero errors in the passive voice assessment would cause `NaN%` to show up in the feedback.
-* Fixes a bug where multiple `rel` arguments prevented correct `nofollow` detection.
-* Fixes a bug where enabling the Show blog page in the breadcrumb settings had the inverse effect. Internally renamed `breadcrumbs-blog-remove` to `breadcrumbs-display-blog-page` to fix logic issues.
-* Fixes a bug where the rewrite rules weren't removed after stripping the category base. This resulted in an unaccessible page.
-* Fixes a bug where adding a `wpseo_sitemap_entries_per_page` was not being used when rendering the sitemaps.
-* Fixes a bug where the Yoast logo in the Configuration Wizard was showing the old version.
-* Removes the backfill hooks when calling `WPSEO_Options::get()` to improve performance.
 
-= 7.0.3 =
-Release Date: March 12th, 2018
-
-Bugfixes:
-* Fixes a bug where the option settings that needs to be migrated are backfilled prematurely, resulting in settings not being migrated as expected.
-* Fixes a bug where adding a `wpseo_sitemap_entries_per_page` is not being applied as expected.
-
-= 7.0.2 =
-Release Date: March 8th, 2018
-
-Bugfixes:
-* Fixes a bug where a fatal error occurs on a taxonomy edit page when social graphs has been disabled for either Facebook or Twitter.
-* Fixes a bug where the breadcrumb path were missing parent entries.
-* Fixes a bug where RSS `before` and `after` content settings were being cleaned too aggressively.
-* Fixes the problem that other plugins are depending on the options we've removed. This patch adds those options as backfills to make them available again.
-
-= 7.0.1 =
-Release Date: March 6th, 2018
-
-Bugfixes:
-* Fixes a bug where the some settings are not properly migrated after upgrading to 7.0.
-
-= 7.0.0 =
-Release Date: March 6th, 2018
+* Fixes a bug where the cornerstone content toggle was available for attachment pages.
+* Fixes a bug where the Search Console page displayed 'first detected' and 'last crawled' dates that were in the future.
 
 Enhancements:
-* Interface:
-    * Introduces an overhaul of the Admin settings to simplify the plugin configuration.
-    * Introduces a new setting to redirect attachment URLs. Previously, we had an option to redirect attachment URLs to their post parent. This didn't work for attachments that weren't attached to anything. This new setting redirects *all* attachment URLs to the URL of the original image / media item. This is all explained on the new `Media` tab under `Search Appearance`. This setting is enabled by default for new installations.
-    * Moves the `Text link counter calculation` to the `Tools` submenu.
-    * Moves the RSS tab from `Advanced` to `Search Appearance`.
-    * Removes the option to remove the `replytocom` variable. We now disable this automatically with a filter (`wpseo_remove_reply_to_com`).
-    * Removes the option to exclude an author from the XML sitemap in favor of a broader option. Instead, we now have an option to set whether this author's archive should be visible in the search results. If you choose not to allow this archive in the search results, it's also excluded from the author sitemap.
-    * Removes the XML sitemaps settings page in favor of a feature toggle on the Features tab and a question in Titles & Meta's "Do you want to show X in search results?".
-    * Moves the setting to disable the Advanced Meta Box for authors to the Features Tab. The setting now also defaults to 'On'.
-    * Expands the content analysis headers by default.
 
-* JSON+LD:
-    * Shows JSON+LD markup for website and search on the front page.
-    * Makes sure JSON+LD organization markup properly links to the frontpage.
-
-* Copy:
-    * Clarifies the copy on the Edit Post page to ask "Allow search engines to show this Post in search results?" instead of having a heading "Meta Robots", which was quite difficult to understand for non-SEO's. Similar changes have been made to the `follow` / `nofollow` setting.
-    * Introduces the question: "Allow search engines to show this `<taxonomy>` in search results?" and bases both the `noindex` and the inclusion in XML sitemaps on this decision.
-    * Changes the wording in the indexing dropdown menu in the Advanced Tab of the metabox from `Yes (Default for posts)` / `Yes` / `No` to `Default for Posts, currently: Yes` / `Yes` / `No`.
-    * Renames the Dashboard menu item to General.
-
-* Other:
-    * Removes the feature that automatically removed stop words from the slug.
-    * Removes `media` post type from the Configuration Wizard, which brings the question about indexing in line with the rest of the plugin.
-    * Removes `jQuery UI autocomplete` from the enqueued scripts.
-    * Adds a filter `wpseo_exclude_from_sitemap_by_post_ids` for controlling which posts are excluded from the sitemap.
-    * Improves the switch toggle settings for use with assistive technologies.
-    * Removes code to add a trailing slash in weird permutations of permalink settings. Canonical should solve this properly.
-    * Removes the functionality to automatically remove blocking XML sitemap files.
-    * Removes the clean permalinks feature, as it was created before canonical was introduced and is no longer needed.
-    * Fixes a reference to the `ACF Content Analysis for Yoast SEO` plugin.
-    * Removes all functions, methods and files that were deprecated since before version 4.0 and were showing a deprecation warning.
-    * Removes the plugin conflict check for the `Head, Footer and Post Injections`-plugin as it no longer manages OpenGraph tags.
-    * Migrates the `hideeditbox-<post type>` and `hideeditbox-tax-<taxonomy>` settings to a saner `display-metabox-pt-<post type>` and `display-metabox-tax-<taxonomy>` settings.
-
-Bugfixes:
-
-* Hides the "Save changes" button on option tabs where there is nothing to save.
-* Fixes a bug where you would not stay on the same option tab after using the save button in Safari.
-* When we set `noindex` on a page, we no longer add a canonical, to prevent confusing search engines.
-* Fixes an issue where the categories / tags overview pages were incorrectly showing elements marked as noindex when in reality they weren't set to noindex (and vice versa). This meant that blue bullets were being shown incorrectly.
-* Fixes an issue where setting posts and pages to noindex didn't change the overview.
-
-Security:
-
-* Fixes a security issue where importing of the values of ini files were being parsed for dynamic content.
+* Introduces the `wpseo_taxonomy_content_fields` filter to add additional fields to the taxonomy metabox.
+* Adds a margin below select fields so there's space between taxonomy settings for breadcrumbs. Props to [@emilyatmobtown](https://github.com/emilyatmobtown)
 
 = Earlier versions =
 
