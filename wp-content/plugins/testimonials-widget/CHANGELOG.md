@@ -2,6 +2,13 @@
 
 ## master
 
+## 3.4.7
+* Confirm WordPress 5.0 compatibility
+* Fix compatibility issue with PHP7* 
+
+## 3.4.6
+* Update Gamajo-Template-Loader template
+
 ## 3.4.5
 * Fix issue with slider/list to filter/display testimonials using category and tags.
 
