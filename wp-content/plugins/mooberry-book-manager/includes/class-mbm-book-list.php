@@ -37,7 +37,11 @@ class MBDB_Book_List implements Countable, Iterator {
 				} else {
 					$sort = array( $orderby, $order );
 				}
-				$books = $this->db_object->get_ordered_selection( $book_list_type, $selection_ids, $sort, $book_filter, $selection_filter, $include_drafts, $book_limit, $offset );
+				if ( $this->is_custom_selection_empty($book_list_type, $selection_ids) || $this->is_sale_selection_empty( $book_list_type, $book_filter) ) {
+					$books = array();
+				} else {
+					$books = $this->db_object->get_ordered_selection( $book_list_type, $selection_ids, $sort, $book_filter, $selection_filter, $include_drafts, $book_limit, $offset );
+				}
 
 			}
 		}
@@ -84,6 +88,15 @@ class MBDB_Book_List implements Countable, Iterator {
 		//error_log('done');
 
 	}
+
+	private function is_custom_selection_empty($book_list_type, $book_filter) {
+		return ( $book_list_type=='custom'  && ( (is_array($book_filter) && count($book_filter) == 0 ) || $book_filter == '' || $book_filter == null ) );
+	}
+
+	private function is_sale_selection_empty($book_list_type, $book_filter) {
+		return ( $book_list_type=='sale'  && ( (is_array($book_filter) && count($book_filter) == 0 ) || $book_filter == '' || $book_filter == null ) );
+	}
+
 
 	private function load_books_array( $books, $randomize, $limit ) {
 
