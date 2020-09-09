@@ -3,7 +3,7 @@
 Plugin Name: Titan Anti-spam & Security
 Plugin URI: http://wordpress.org/plugins/anti-spam/
 Description: Titan Security - Anti-spam, Anti-virus, Firewall and Malware Scan
-Version: 7.1.6
+Version: 7.2.0
 Author: CreativeMotion
 Text Domain: titan-security
 Author URI: https://cm-wp.com/
@@ -89,19 +89,18 @@ $wtitan_plugin_info = [
 
 	// FRAMEWORK MODULES
 	'load_factory_modules' => [
-		['libs/factory/bootstrap', 'factory_bootstrap_433', 'admin'],
-		['libs/factory/forms', 'factory_forms_430', 'admin'],
-		['libs/factory/pages', 'factory_pages_432', 'admin'],
-		['libs/factory/clearfy', 'factory_clearfy_224', 'all'],
-		['libs/factory/freemius', 'factory_freemius_120', 'all'],
-		['libs/factory/feedback', 'factory_feedback_106', 'admin']
+		['libs/factory/bootstrap', 'factory_bootstrap_436', 'admin'],
+		['libs/factory/forms', 'factory_forms_433', 'admin'],
+		['libs/factory/pages', 'factory_pages_435', 'admin'],
+		['libs/factory/clearfy', 'factory_clearfy_227', 'all'],
+		['libs/factory/freemius', 'factory_freemius_123', 'all'],
+		['libs/factory/feedback', 'factory_feedback_107', 'admin']
 	],
-	'load_plugin_components' => array(
-	)
+	'load_plugin_components' => array()
 
 ];
 
-$wtitan_compatibility = new Wbcr_Factory432_Requirements(__FILE__, array_merge($wtitan_plugin_info, [
+$wtitan_compatibility = new Wbcr_Factory436_Requirements(__FILE__, array_merge($wtitan_plugin_info, [
 	'plugin_already_activate' => defined('WTITAN_PLUGIN_ACTIVE'),
 	'required_php_version' => '5.6',
 	'required_wp_version' => '4.9.0',
@@ -140,6 +139,7 @@ define('WTITAN_PLUGIN_URL', plugins_url(null, __FILE__));
  */
 require_once(WTITAN_PLUGIN_DIR . '/libs/factory/core/boot.php');
 require_once(WTITAN_PLUGIN_DIR . '/includes/antispam/functions.php');
+require_once WTITAN_PLUGIN_DIR . "/includes/helpers.php";
 require_once(WTITAN_PLUGIN_DIR . '/includes/class-titan-security-plugin.php');
 
 try {

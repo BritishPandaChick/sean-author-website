@@ -45,12 +45,12 @@ class Tweaks extends Base {
 	/**
 	 * WBCR\Page\Settings constructor.
 	 *
-	 * @param \Wbcr_Factory432_Plugin $plugin
+	 * @param \Wbcr_Factory436_Plugin $plugin
 	 *
 	 * @author Alexander Kovalev <alex.kovalevv@gmail.com>
 	 *
 	 */
-	public function __construct( \Wbcr_Factory432_Plugin $plugin ) {
+	public function __construct( \Wbcr_Factory436_Plugin $plugin ) {
 		$this->menu_title                  = __( 'Tweaks', 'titan-security' );
 		$this->page_menu_short_description = __( 'Security tweaks', 'titan-security' );
 
@@ -66,7 +66,7 @@ class Tweaks extends Base {
 	 *
 	 * @return void
 	 * @since 6.2
-	 * @see   Wbcr_FactoryPages432_AdminPage
+	 * @see   Wbcr_FactoryPages435_AdminPage
 	 *
 	 */
 	public function assets( $scripts, $styles ) {
@@ -88,8 +88,6 @@ class Tweaks extends Base {
 				'control.dropdown',
 				'control.checkbox'
 			], 'bootstrap' );
-
-			add_action( 'wbcr/factory/update_option', [ $this, 'before_save' ] );
 		}
 	}
 

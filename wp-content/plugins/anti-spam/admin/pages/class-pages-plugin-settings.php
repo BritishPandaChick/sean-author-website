@@ -4,7 +4,7 @@ namespace WBCR\Titan\Page;
 
 use WBCR\Titan\Plugin;
 use WBCR\Titan\Plugin\Helper;
-use Wbcr_Factory432_Plugin;
+use Wbcr_Factory436_Plugin;
 
 /**
  * The plugin Settings.
@@ -46,9 +46,9 @@ class PluginSettings extends Base {
 	public $page_menu_position = 2;
 
 	/**
-	 * @param Wbcr_Factory432_Plugin $plugin
+	 * @param Wbcr_Factory436_Plugin $plugin
 	 */
-	public function __construct( Wbcr_Factory432_Plugin $plugin ) {
+	public function __construct( Wbcr_Factory436_Plugin $plugin ) {
 		$this->menu_title                  = __( 'Settings', 'titan-security' );
 		$this->page_menu_short_description = __( 'Global plugin settings', 'titan-security' );
 
@@ -344,8 +344,6 @@ class PluginSettings extends Base {
 	 * Ajax действите, выполняется для получения всех доступных опций для экспорта.
 	 */
 	public function import_settings() {
-		require_once WTITAN_PLUGIN_DIR . "/includes/helpers.php";
-
 		global $wpdb;
 
 		check_ajax_referer( 'wtitan_import_options' );

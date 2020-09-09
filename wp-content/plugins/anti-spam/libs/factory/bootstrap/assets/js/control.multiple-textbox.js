@@ -30,14 +30,14 @@
 		});
 	};
 
-	$.fn.factoryBootstrap433_MultipleTextboxControl = function() {
+	$.fn.factoryBootstrap436_MultipleTextboxControl = function() {
 		return this.each(function() {
 			new multipleControl(this);
 		});
 	};
 
 	$(function() {
-		$(".factory-bootstrap-433 .factory-multiple-textbox-group").factoryBootstrap433_MultipleTextboxControl();
+		$(".factory-bootstrap-436 .factory-multiple-textbox-group").factoryBootstrap436_MultipleTextboxControl();
 	});
 
 })(jQuery);

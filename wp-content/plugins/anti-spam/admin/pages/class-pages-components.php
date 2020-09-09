@@ -27,7 +27,7 @@ class Components extends Base {
 	 * Mainly used to navigate between pages.
 	 *
 	 * @since 7.0.3
-	 * @see   FactoryPages432_AdminPage
+	 * @see   FactoryPages435_AdminPage
 	 *
 	 * @var string
 	 */
@@ -73,7 +73,7 @@ class Components extends Base {
 	 *
 	 * @return void
 	 * @since 7.0.2
-	 * @see   FactoryPages432_AdminPage
+	 * @see   FactoryPages435_AdminPage
 	 *
 	 */
 	public function assets($scripts, $styles)
@@ -83,8 +83,8 @@ class Components extends Base {
 		$this->styles->add(WTITAN_PLUGIN_URL . '/admin/assets/css/components.css');
 
 		/**
-		 * @param \Wbcr_Factory432_StyleList $styles
-		 * @param \Wbcr_Factory432_ScriptList $scripts
+		 * @param \Wbcr_Factory436_StyleList $styles
+		 * @param \Wbcr_Factory436_ScriptList $scripts
 		 *
 		 * @since 7.0.3
 		 *
@@ -99,7 +99,7 @@ class Components extends Base {
 	 * @param Plugin $plugin
 	 *
 	 * @return array
-	 * @see 'libs\factory\pages\templates\FactoryPages432_ImpressiveThemplate'
+	 * @see 'libs\factory\pages\templates\FactoryPages435_ImpressiveThemplate'
 	 */
 	public function getActionNotices($notices)
 	{
@@ -192,7 +192,7 @@ class Components extends Base {
 
 		]);
 
-		if( is_plugin_active('plugins-scanner-premium/plugins-scanner-premium.php') || is_plugin_active('wp-plugin-plugins-scanner-premium/plugins-scanner-premium.php') ) {
+		/*if( is_plugin_active('plugins-scanner-premium/plugins-scanner-premium.php') || is_plugin_active('wp-plugin-plugins-scanner-premium/plugins-scanner-premium.php') ) {
 			$response[] = [
 				'name' => 'titan_plugin_scanner',
 				'title' => __('Titan Plugins Scanner', 'titan-security'),
@@ -216,7 +216,7 @@ class Components extends Base {
 				'description' => __('Preventively prevents infection of the site when activated by the plugin.', 'titan-security'),
 				//'settings_url' => admin_url( 'admin.php?page=hlp_hide_login-' . $this->plugin->getPluginName() )
 			];
-		}
+		}*/
 
 		/**
 		 * @param array $response
