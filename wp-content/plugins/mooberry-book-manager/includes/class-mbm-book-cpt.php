@@ -54,12 +54,14 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 		if ( MBDB()->options->get_mbdb_book_seo_enabled() == 'yes' ) {
 			add_filter( 'wp_head', array( $this, 'meta_tags' ) );
 		}
-		if ( MBDB()->options->override_wpseo( 'og' ) ) {
+		// wpseo_opengraph is deprecated
+        // TODO: see if there is a replacement
+		/*if ( MBDB()->options->override_wpseo( 'og' ) ) {
 			add_filter( 'wpseo_opengraph_title', array( $this, 'override_wp_seo_meta' ) );
 			add_filter( 'wpseo_opengraph_url', array( $this, 'override_wp_seo_meta' ) );
 			add_filter( 'wpseo_opengraph_desc', array( $this, 'override_wp_seo_meta' ) );
 			add_filter( 'wpseo_opengraph_image', array( $this, 'override_wp_seo_meta' ) );
-		}
+		}*/
 		if ( MBDB()->options->override_wpseo( 'twitter' ) ) {
 			add_filter( 'wpseo_twitter_title', array( $this, 'override_wp_seo_meta' ) );
 			add_filter( 'wpseo_twitter_card_type', array( $this, 'override_wp_seo_meta' ) );
@@ -1799,9 +1801,28 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 
 
 		if ( $this->data_object->has_kindle_preview() ) {
-			//return $this->data_object->kindle_preview;
 
-			return apply_filters( 'mbdb_shortcode_excerpt_kindle_preview', do_shortcode( '[book_kindle_preview asin="' . $this->data_object->kindle_preview . '"]' ) );
+			$affiliate_codes = array();
+			$aff_arg         = '';
+			$retailers       = MBDB()->options->retailers;
+			if ( is_array( $retailers ) ) {
+				foreach ( $retailers as $retailer ) {
+					if ( $retailer->is_amazon && $retailer->has_affiliate_code ) {
+						$affiliate_codes[] = trim( $retailer->affiliate_code );
+					}
+				}
+				if ( count( $affiliate_codes ) != 0 ) {
+					$affiliate_codes = array_unique( $affiliate_codes );
+					$aff_arg = $affiliate_codes[0];
+					// if affiliate code starts with ? and URL already contains ?, use & to make it an additional URL argument.
+					if ( substr( $aff_arg, 0, 1 ) == '?' ) {
+						$aff_arg = '&' . substr( $aff_arg, 1 );
+					}
+
+					$aff_arg = ' affiliate="' . $aff_arg . '" ';
+				}
+			}
+			return apply_filters( 'mbdb_shortcode_excerpt_kindle_preview', do_shortcode( '[book_kindle_preview asin="' . $this->data_object->kindle_preview . '" ' . $aff_arg . ' ]' ) );
 		}
 
 
@@ -1862,7 +1883,9 @@ class Mooberry_Book_Manager_Book_CPT extends Mooberry_Book_Manager_CPT {
 			'affiliate' => '',
 		), $attr );
 
-		return '<div class="mbm-book-excerpt"><span class="mbm-book-excerpt-label">Excerpt:</span><iframe type="text/html" width="100%" height="650" frameborder="0" allowfullscreen style="max-width:100%" src="https://read.amazon.com/kp/card?asin=' . esc_attr( $attr['asin'] ) . '&preview=inline&linkCode=kpe&tag=' . esc_attr( $attr['affiliate'] ) . '" ></iframe></div>';
+
+
+		return '<div class="mbm-book-excerpt"><span class="mbm-book-excerpt-label">Excerpt:</span><iframe type="text/html" width="100%" height="650" frameborder="0" allowfullscreen style="max-width:100%" src="https://read.amazon.com/kp/card?asin=' . esc_attr( $attr['asin'] ) . '&preview=inline&linkCode=kpe' . esc_attr( $attr['affiliate'] ) . '" ></iframe></div>';
 
 	}
 

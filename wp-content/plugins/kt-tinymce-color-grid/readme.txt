@@ -2,7 +2,7 @@
 Contributors: kungtiger
 Requires at least: 3.5
 Tested up to: 5.3
-Stable tag: 1.15.4
+Stable tag: 1.15.5
 Requires PHP: 5.3
 Requires at least: 5.2
 Tags: color, customizer, editor, gutenberg, palette, picker, tinymce
@@ -82,6 +82,9 @@ Please [contact me](http://wordpress.org/support/plugin/kt-tinymce-color-grid) a
 4. Legacy support for the classic editor
 
 == Changelog ==
+
+= 1.15.5 =
+Fix: broken Astra 2.6 integration
 
 = 1.15.4 =
 Fix: wrong CSS class/variable names for CSS/SCSS exports
@@ -303,6 +306,9 @@ Fixes an error when using more than one TinyMCE
 Initial release.
 
 == Upgrade Notice ==
+
+= 1.15.5 =
+Fixes broken Astra 2.6 palette integration
 
 = 1.15.4 =
 Fixes incorrect class and variable names for CSS/SCC exports

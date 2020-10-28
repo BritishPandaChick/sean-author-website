@@ -4,7 +4,7 @@
  * Plugin Name: Central Color Palette
  * Plugin URI: https://wordpress.org/plugins/kt-tinymce-color-grid
  * Description: Manage a site-wide central color palette for a uniform look'n'feel! Supports the new block editor, theme customizer and many themes and plugins.
- * Version: 1.15.4
+ * Version: 1.15.5
  * Author: Daniel Menzies
  * Author URI: http://profiles.wordpress.org/kungtiger
  * License: GPL2
@@ -13,7 +13,7 @@
  */
 
 if (defined('ABSPATH') && !class_exists('kt_Central_Palette')) {
-    define('KT_CENTRAL_PALETTE', '1.15.4');
+    define('KT_CENTRAL_PALETTE', '1.15.5');
     define('KT_CENTRAL_PALETTE_DIR', plugin_dir_path(__FILE__));
     define('KT_CENTRAL_PALETTE_URL', plugin_dir_url(__FILE__));
     define('KT_CENTRAL_PALETTE_BASENAME', plugin_basename(__FILE__));
@@ -477,8 +477,12 @@ if (defined('ABSPATH') && !class_exists('kt_Central_Palette')) {
             }
 
             if ($this->supports('astra') && $this->get_option(self::ASTRA_THEME)) {
-                add_filter('astra_color_palettes', array($this, 'astra_integration'));
-                add_action('admin_enqueue_scripts', array($this, 'iris_enqueue_script'));
+                if (version_compare(ASTRA_THEME_VERSION, '2.6.0', '<')) {
+                    add_filter('astra_color_palettes', array($this, 'astra_legacy_integration'));
+                    add_action('admin_enqueue_scripts', array($this, 'iris_enqueue_script'));
+                } else {
+                    add_filter('astra_color_palettes', array($this, 'astra_integration'));
+                }
             }
 
             if ($this->supports('oxygen_vsb') && $this->get_option(self::OXYGEN_VSB)) {
@@ -954,6 +958,13 @@ if (defined('ABSPATH') && !class_exists('kt_Central_Palette')) {
         }
 
         public function astra_integration($palette) {
+            return $this->get_colors(array(
+                        '_force_alpha' => $this->get_option(self::ASTRA_ALPHA),
+                        'default' => $palette,
+            ));
+        }
+
+        public function astra_legacy_integration($palette) {
             return $this->get_colors(array(
                         '_force_alpha' => $this->get_option(self::ASTRA_ALPHA),
                         '_name' => true,
