@@ -2,7 +2,7 @@
 /*
 Plugin Name: Cookie Notice & Compliance for GDPR / CCPA
 Description: Cookie Notice allows you to you elegantly inform users that your site uses cookies and helps you comply with GDPR, CCPA and other data privacy laws.
-Version: 2.0.0
+Version: 2.0.2
 Author: Hu-manity.co
 Author URI: https://hu-manity.co/
 Plugin URI: https://hu-manity.co/
@@ -29,7 +29,7 @@ if ( ! defined( 'ABSPATH' ) )
  * Cookie Notice class.
  *
  * @class Cookie_Notice
- * @version	2.0.0
+ * @version	2.0.1
  */
 class Cookie_Notice {
 
@@ -42,6 +42,7 @@ class Cookie_Notice {
 		'general' => array(
 			'app_id'				=> '',
 			'app_key'				=> '',
+			'app_blocking'			=> true,
 			'position'				=> 'bottom',
 			'message_text'			=> '',
 			'css_style'				=> 'bootstrap',
@@ -80,11 +81,11 @@ class Cookie_Notice {
 			'script_placement'			=> 'header',
 			'translate'					=> true,
 			'deactivation_delete'		=> false,
-			'update_version'			=> 3,
+			'update_version'			=> 4,
 			'update_notice'				=> true,
 			'update_delay_date'			=> 0
 		),
-		'version'	=> '2.0.0'
+		'version'	=> '2.0.2'
 	);
 	
 	private static $_instance;
@@ -159,7 +160,9 @@ class Cookie_Notice {
 	 * Set plugin status.
 	 */
 	public function set_status() {
-		$this->status = get_option( 'cookie_notice_status', '' );
+		$status = get_option( 'cookie_notice_status', '' );
+		
+		$this->status = ! empty( $status ) && in_array( $status, array( 'active', 'pending' ), true ) ? $status : false;
 	}
 
 
@@ -189,15 +192,6 @@ class Cookie_Notice {
 	 * Activate the plugin.
 	 */
 	public function activation() {
-		// get current database version
-		$current_db_version = get_option( 'cookie_notice_version', '1.0.0' );
-
-		// new version?
-		if ( version_compare( $current_db_version, $this->defaults['version'], '<' ) ) {
-			// update plugin version
-			update_option( 'cookie_notice_version', $this->defaults['version'], false );
-		}
-		
 		add_option( 'cookie_notice_options', $this->defaults['general'], '', 'no' );
 	}
 
@@ -228,14 +222,21 @@ class Cookie_Notice {
 		
 		$current_update = 5;
 		
-		if ( $this->options['general']['update_version'] < $current_update ) {
+		// get current database version
+		$current_db_version = get_option( 'cookie_notice_version', '1.0.0' );
+		
+		if ( version_compare( $current_db_version, $this->defaults['version'], '<' ) && $this->options['general']['update_version'] < $current_update ) {
 			// check version, if update version is lower than plugin version, set update notice to true
 			$this->options['general'] = wp_parse_args( array( 'update_version' => $current_update, 'update_notice' => true ), $this->options['general'] );
 
 			update_option( 'cookie_notice_options', $this->options['general'] );
 			
-			// show welcome
-			set_transient( 'cn_activation_redirect', 1 );
+			// update plugin version
+			update_option( 'cookie_notice_version', $this->defaults['version'], false );
+			
+			// show welcome, if no compliance only
+			if ( empty( $this->status ) )
+				set_transient( 'cn_activation_redirect', 1 );
 		}
 	}
 
@@ -367,7 +368,7 @@ class Cookie_Notice {
 		// escape class(es)
 		$args['class'] = esc_attr( $args['class'] );
 		
-		if ( ! empty( $this->get_status() ) ) {
+		if ( Cookie_Notice()->get_status() === 'active' ) {
 			$shortcode = '<a href="#" class="cn-revoke-cookie cn-button cn-revoke-inline' . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $args['class'] !== '' ? ' ' . $args['class'] : '' ) . '" title="' . esc_html( $args['title'] ) . '" data-hu-action="notice-revoke">' . esc_html( $args['title'] ) . '</a>';
 		} else {
 			$shortcode = '<a href="#" class="cn-revoke-cookie cn-button cn-revoke-inline' . ( $options['css_style'] !== 'none' ? ' ' . $options['css_style'] : '' ) . ( $args['class'] !== '' ? ' ' . $args['class'] : '' ) . '" title="' . esc_html( $args['title'] ) . '">' . esc_html( $args['title'] ) . '</a>';
@@ -408,7 +409,7 @@ class Cookie_Notice {
 	 * @return bool
 	 */
 	public static function cookies_accepted() {
-		if ( ! empty( Cookie_Notice()->get_status() ) ) {
+		if ( Cookie_Notice()->get_status() === 'active' ) {
 			$cookies = isset( $_COOKIE['hu-consent'] ) ? json_decode( $_COOKIE['hu-consent'], true ) : array();
 			
 			$result = ! empty( $cookies['consent'] ) ? true : false;
@@ -425,7 +426,7 @@ class Cookie_Notice {
 	 * @return boolean Whether cookies are set
 	 */
 	public function cookies_set() {
-		if ( ! empty( Cookie_Notice()->get_status() ) ) {
+		if ( Cookie_Notice()->get_status() === 'active' ) {
 			$result = isset( $_COOKIE['hu-consent'] );
 		} else {
 			$result = isset( $_COOKIE['cookie_notice_accepted'] );

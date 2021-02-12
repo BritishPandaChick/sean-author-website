@@ -15,8 +15,7 @@ class Cookie_Notice_Frontend {
 	public function __construct() {
 		// actions
 		add_action( 'init', array( $this, 'init' ) );
-		add_action( 'init', array( $this, 'add_cors_http_header' ) );
-		
+
 		$this->widget_url = '//cdn.hu-manity.co/hu-banner.min.js';
 	}
 
@@ -24,16 +23,21 @@ class Cookie_Notice_Frontend {
 	 * Init frontend.
 	 */
 	public function init() {
+		// purge cache
+		if ( isset( $_GET['hu_purge_cache'] ) )
+			$this->purge_cache();
+
 		// check preview mode
 		$this->preview_mode = isset( $_GET['cn_preview_mode'] );
-		
+
 		// whether to count robots
 		$this->is_bot = Cookie_Notice()->bot_detect->is_crawler();
 
 		// bail if in preview mode or it's a bot request
 		if ( ! $this->preview_mode && ! $this->is_bot ) {
 			// init cookie compliance
-			if ( ! empty( Cookie_Notice()->get_status() ) ) {
+			if ( Cookie_Notice()->get_status() === 'active' ) {
+				add_action( 'send_headers', array( $this, 'add_cors_http_header' ) );
 				add_action( 'wp_head', array( $this, 'wp_head_scripts' ), 0 );
 				add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_compliance_scripts' ) );
 				add_action( 'wp_ajax_cn_save_config', array( $this, 'ajax_save_config' ) );
@@ -45,23 +49,19 @@ class Cookie_Notice_Frontend {
 				add_action( 'wp_head', array( $this, 'wp_print_header_scripts' ) );
 				add_action( 'wp_print_footer_scripts', array( $this, 'wp_print_footer_scripts' ) );
 				add_action( 'wp_footer', array( $this, 'add_cookie_notice' ), 1000 );
+
 				// filters
 				add_filter( 'body_class', array( $this, 'change_body_class' ) );
 			}
 		}
 	}
-	
+
 	/**
 	 * Add CORS header for API requests and purge cache.
 	 */
 	public function add_cors_http_header() {
 		header( "Access-Control-Allow-Origin: https://app.hu-manity.co" );
 		header( 'Access-Control-Allow-Methods: GET' );
-		
-		// purge cache
-		if ( isset( $_GET['hu_purge_cache'] ) ) {
-			$this->purge_cache();
-		}
 	}
 
 	/**
@@ -76,7 +76,8 @@ class Cookie_Notice_Frontend {
 	
 		$options = array(
 			'appID' => Cookie_Notice()->options['general']['app_id'],
-			'currentLanguage'	=> $locale_code[0]
+			'currentLanguage'	=> $locale_code[0],
+			'blocking' => (bool) ( ! is_user_logged_in() ? Cookie_Notice()->options['general']['app_blocking'] : false )
 		);
 		
 		$cached_config = get_transient( 'cookie_notice_compliance_cache' );
@@ -169,7 +170,7 @@ class Cookie_Notice_Frontend {
 			'see_more_opt'			=> Cookie_Notice()->options['general']['see_more_opt'],
 			'link_target'			=> Cookie_Notice()->options['general']['link_target'],
 			'link_position'			=> Cookie_Notice()->options['general']['link_position'],
-			'aria_label'			=> __( 'Cookie Notice', 'cookie-notice' )
+			'aria_label'			=> 'Cookie Notice'
 		) );
 
 		// check legacy parameters
@@ -293,7 +294,7 @@ class Cookie_Notice_Frontend {
 	 * Save compliance config caching.
 	 */
 	public function ajax_save_config() {
-		if ( ! empty( Cookie_Notice()->get_status() ) )
+		if ( Cookie_Notice()->get_status() !== 'active' )
 			return;
 		
 		if ( ! wp_verify_nonce( esc_attr( $_REQUEST['nonce'] ), 'cn_save_config' ) )

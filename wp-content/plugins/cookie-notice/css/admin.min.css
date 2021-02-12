@@ -132,8 +132,16 @@
 	margin-top: 10px;
 }
 
+.cn_compliance_status {
+	margin-right: 15px;
+}
+
+#cn_app_status .cn_compliance_status label {
+	margin-left: 5px !important;
+}
+
 #cn_app_status {
-	margin-bottom: 10px;
+	margin-bottom: 30px;
 }
 
 #cn_app_status label {

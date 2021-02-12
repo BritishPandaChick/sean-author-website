@@ -364,7 +364,8 @@
 							$( accordionItem ).addClass( 'cn-collapsed cn-disabled' );
 
 							// show billing
-							$( accordionItem ).next().removeClass( 'cn-collapsed cn-disabled' );
+							$( accordionItem ).next().removeClass( 'cn-disabled' );
+							$( accordionItem ).find( 'form' ).removeClass( 'cn-form-disabled' );
 
 							// init braintree after payment screen is loaded via AJAX
 							btInit();

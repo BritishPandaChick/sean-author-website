@@ -33,7 +33,9 @@ class Cookie_Notice_Settings {
 		add_action( 'after_setup_theme', array( $this, 'load_defaults' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+		add_action( 'admin_print_styles', array( $this, 'admin_print_styles' ) );
 		add_action( 'wp_ajax_cn_purge_cache', array( $this, 'ajax_purge_cache' ) );
+		add_action( 'admin_notices', array( $this, 'settings_errors' ) );
 		
 		$this->app_login_url = 'https://app.hu-manity.co/#/en/cc2/login';
 	}
@@ -114,6 +116,7 @@ class Cookie_Notice_Settings {
 			1 => __( 'You can choose whether or not you want to consent to our use of cookies through the options below. You can customise the use of cookies, and change your settings at any time.', 'cookie-notice' )
 		);
 		
+		/*
 		$this->countries = array(
 			'AF' => __( 'Afghanistan', 'events-maker' ),
 			'AX' => __( '&#197;land Islands', 'events-maker' ),
@@ -360,6 +363,7 @@ class Cookie_Notice_Settings {
 			'ZM' => __( 'Zambia', 'events-maker' ),
 			'ZW' => __( 'Zimbabwe', 'events-maker' )
 		);
+		*/
 		
 		// set default text strings
 		Cookie_Notice()->defaults['general']['message_text'] = __( 'We use cookies to ensure that we give you the best experience on our website. If you continue to use this site we will assume that you are happy with it.', 'cookie-notice' );
@@ -402,7 +406,7 @@ class Cookie_Notice_Settings {
 	 * Add submenu.
 	 */
 	public function admin_menu_options() {
-		add_options_page( __( 'Cookie Notice', 'cookie-notice' ), __( 'Cookie Notice', 'cookie-notice' ), apply_filters( 'cn_manage_cookie_notice_cap', 'manage_options' ), 'cookie-notice', array( $this, 'options_page' ) );
+		add_menu_page( __( 'Cookie Notice', 'cookie-notice' ), __( 'Cookies', 'cookie-notice' ), apply_filters( 'cn_manage_cookie_notice_cap', 'manage_options' ), 'cookie-notice', array( $this, 'options_page' ), 'none', '99.3' );
 	}
 
 	/**
@@ -410,7 +414,7 @@ class Cookie_Notice_Settings {
 	 * 
 	 * @return mixed
 	 */
-	public function options_page() {
+	public function options_page() {	
 		echo '
 		<div class="wrap">
 			<h2>' . __( 'Cookie Notice & Compliance for GDPR/CCPA', 'cookie-notice' ) . '</h2>
@@ -420,17 +424,17 @@ class Cookie_Notice_Settings {
 						<div class="inner">';
 		
 		// compliance enabled
-		if ( ! empty( Cookie_Notice()->get_status() ) ) {
+		if ( Cookie_Notice()->get_status() === 'active' ) {
 			echo '			<h2>We\'re Promoting Privacy&trade;</h2>
 							<p>' . __( 'Promote the privacy of your website visitors without affecting how you do your business.', 'cookie-notice' ) . '</p>';
 		} else {
-			echo '			<h1><b>' . __( 'Cookie Compliance&trade;', 'cookie-notice' ) . '</b></h1>
+			echo '			<h1><b>' . 'Cookie Compliance&trade;' . '</b></h1>
 							<h2>' . __( 'The next generation of Cookie Notice', 'cookie-notice' ) . '</h2>
 							<div class="cn-lead">
 								<p>' . __( 'An all new web application to help you deliver better consent experiences and comply with GDPR and CCPA more effectively.', 'cookie-notice' ) . '</p>
 							</div>
-							<img src="' . plugins_url( '../img/screen-dashboard.png', __FILE__ ) . '">
-							<a href="' . esc_url( admin_url( 'index.php?page=cookie-notice-welcome' ) ) . '" class="cn-btn">' . __( 'Upgrade', 'cookie-notice' ) . '</a>';
+							<img src="//cns-53eb.kxcdn.com/screen-dashboard-small.png" alt="Cookie Compliance dashboard" />
+							<a href="' . esc_url( admin_url( 'index.php?page=cookie-notice-welcome&screen=2' ) ) . '" class="cn-btn">' . __( 'Upgrade', 'cookie-notice' ) . '</a>';
 		}
 		
 		echo '
@@ -461,28 +465,28 @@ class Cookie_Notice_Settings {
 	public function register_settings() {
 		register_setting( 'cookie_notice_options', 'cookie_notice_options', array( $this, 'validate_options' ) );
 
-		
 		// compliance enabled
-		if ( ! empty( Cookie_Notice()->get_status() ) ) {
+		if ( Cookie_Notice()->get_status() === 'active' ) {
 			// configuration
-			add_settings_section( 'cookie_notice_compliance', __( 'Cookie Compliance Settings', 'cookie-notice' ), array( $this, 'cn_section_compliance' ), 'cookie_notice_options' );
+			add_settings_section( 'cookie_notice_compliance', __( 'Compliance Settings', 'cookie-notice' ), array( $this, 'cn_section_compliance' ), 'cookie_notice_options' );
 			add_settings_field( 'cn_app_status', __( 'Compliance status', 'cookie-notice' ), array( $this, 'cn_app_status' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			add_settings_field( 'cn_app_id', __( 'App ID', 'cookie-notice' ), array( $this, 'cn_app_id' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			add_settings_field( 'cn_app_key', __( 'App Key', 'cookie-notice' ), array( $this, 'cn_app_key' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			
 			add_settings_section( 'cookie_notice_configuration', __( 'Miscellaneous Settings', 'cookie-notice' ), array( $this, 'cn_section_configuration' ), 'cookie_notice_options' );
+			add_settings_field( 'cn_app_blocking', __( 'Autoblocking', 'cookie-notice' ), array( $this, 'cn_app_blocking' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_app_purge_cache', __( 'Cache', 'cookie-notice' ), array( $this, 'cn_app_purge_cache' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_script_placement', __( 'Script placement', 'cookie-notice' ), array( $this, 'cn_script_placement' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_deactivation_delete', __( 'Deactivation', 'cookie-notice' ), array( $this, 'cn_deactivation_delete' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 		// compliance disabled
 		} else {
 			// configuration
-			add_settings_section( 'cookie_notice_compliance', __( 'Cookie Compliance Settings', 'cookie-notice' ), array( $this, 'cn_section_compliance' ), 'cookie_notice_options' );
+			add_settings_section( 'cookie_notice_compliance', __( 'Compliance Settings', 'cookie-notice' ), array( $this, 'cn_section_compliance' ), 'cookie_notice_options' );
 			add_settings_field( 'cn_app_status', __( 'Compliance status', 'cookie-notice' ), array( $this, 'cn_app_status' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			add_settings_field( 'cn_app_id', __( 'App ID', 'cookie-notice' ), array( $this, 'cn_app_id' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			add_settings_field( 'cn_app_key', __( 'App Key', 'cookie-notice' ), array( $this, 'cn_app_key' ), 'cookie_notice_options', 'cookie_notice_compliance' );
 			
-			add_settings_section( 'cookie_notice_configuration', __( 'Cookie Notice Settings', 'cookie-notice' ), array( $this, 'cn_section_configuration' ), 'cookie_notice_options' );
+			add_settings_section( 'cookie_notice_configuration', __( 'Notice Settings', 'cookie-notice' ), array( $this, 'cn_section_configuration' ), 'cookie_notice_options' );
 			add_settings_field( 'cn_message_text', __( 'Message', 'cookie-notice' ), array( $this, 'cn_message_text' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_accept_text', __( 'Button text', 'cookie-notice' ), array( $this, 'cn_accept_text' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_see_more', __( 'Privacy policy', 'cookie-notice' ), array( $this, 'cn_see_more' ), 'cookie_notice_options', 'cookie_notice_configuration' );
@@ -496,9 +500,9 @@ class Cookie_Notice_Settings {
 			add_settings_field( 'cn_time_rejected', __( 'Rejected expiry', 'cookie-notice' ), array( $this, 'cn_time_rejected' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_script_placement', __( 'Script placement', 'cookie-notice' ), array( $this, 'cn_script_placement' ), 'cookie_notice_options', 'cookie_notice_configuration' );
 			add_settings_field( 'cn_deactivation_delete', __( 'Deactivation', 'cookie-notice' ), array( $this, 'cn_deactivation_delete' ), 'cookie_notice_options', 'cookie_notice_configuration' );
-			
+
 			// design
-			add_settings_section( 'cookie_notice_design', __( 'Cookie Notice Design', 'cookie-notice' ), array( $this, 'cn_section_design' ), 'cookie_notice_options' );
+			add_settings_section( 'cookie_notice_design', __( 'Notice Design', 'cookie-notice' ), array( $this, 'cn_section_design' ), 'cookie_notice_options' );
 			add_settings_field( 'cn_position', __( 'Position', 'cookie-notice' ), array( $this, 'cn_position' ), 'cookie_notice_options', 'cookie_notice_design' );
 			add_settings_field( 'cn_hide_effect', __( 'Animation', 'cookie-notice' ), array( $this, 'cn_hide_effect' ), 'cookie_notice_options', 'cookie_notice_design' );
 			add_settings_field( 'cn_css_style', __( 'Button style', 'cookie-notice' ), array( $this, 'cn_css_style' ), 'cookie_notice_options', 'cookie_notice_design' );
@@ -525,7 +529,10 @@ class Cookie_Notice_Settings {
 				echo '
 				<fieldset>
 					<div id="cn_app_status">
-						<label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label>
+						<span class="cn_compliance_status">' . __( 'Notice', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Autoblocking', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Cookie Categories', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Proof-of-Consent', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
 					</div>
 					<div id="cn_app_actions">
 						<a href="' . $this->app_login_url . '" class="button button-primary button-hero" target="_blank">' . __( 'Log in & Configure', 'cookie-notice' ) . '</a>
@@ -537,7 +544,10 @@ class Cookie_Notice_Settings {
 				echo '
 				<fieldset>
 					<div id="cn_app_status">
-						<label class="cn-pending">' . __( 'Pending', 'cookie-notice' ) . '</label>
+						<span class="cn_compliance_status">' . __( 'Notice', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Autoblocking', 'cookie-notice' ) . ': <label class="cn-pending">' . __( 'Pending', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Cookie Categories', 'cookie-notice' ) . ': <label class="cn-pending">' . __( 'Pending', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Proof-of-Consent', 'cookie-notice' ) . ': <label class="cn-pending">' . __( 'Pending', 'cookie-notice' ) . '</label></span>
 					</div>
 					<div id="cn_app_actions">
 						<a href="' . $this->app_login_url . '" class="button button-primary button-hero" target="_blank">' . __( 'Log in & Complete setup', 'cookie-notice' ) . '</a>
@@ -549,7 +559,10 @@ class Cookie_Notice_Settings {
 				echo '
 				<fieldset>
 					<div id="cn_app_status">
-						<label class="cn-inactive">' . __( 'Inactive', 'cookie-notice' ) . '</label>
+						<span class="cn_compliance_status">' . __( 'Notice', 'cookie-notice' ) . ': <label class="cn-active">' . __( 'Active', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Autoblocking', 'cookie-notice' ) . ': <label class="cn-inactive">' . __( 'Inactive', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Cookie Categories', 'cookie-notice' ) . ': <label class="cn-inactive">' . __( 'Inactive', 'cookie-notice' ) . '</label></span>
+						<span class="cn_compliance_status">' . __( 'Proof-of-Consent', 'cookie-notice' ) . ': <label class="cn-inactive">' . __( 'Inactive', 'cookie-notice' ) . '</label></span>
 					</div>
 					<div id="cn_app_actions">
 						<a href="' . admin_url( 'index.php?page=cookie-notice-welcome' ) . '" class="button button-primary button-hero">' . __( 'Add GDPR/CCPA Compliance', 'cookie-notice' ) . '</a>
@@ -568,7 +581,7 @@ class Cookie_Notice_Settings {
 		<fieldset>
 			<div id="cn_app_id">
 				<input type="text" class="regular-text" name="cookie_notice_options[app_id]" value="' . esc_attr( Cookie_Notice()->options['general']['app_id'] ) . '" />
-			<p class="description">' . __( 'Enter your Cooking Compliance&trade; application ID.', 'cookie-notice' ) . '</p>
+			<p class="description">' . __( 'Enter your Cookie Compliance&trade; application ID.', 'cookie-notice' ) . '</p>
 			</div>
 		</fieldset>';
 	}
@@ -580,8 +593,19 @@ class Cookie_Notice_Settings {
 		echo '
 		<div id="cn_app_key">
 			<input type="password" class="regular-text" name="cookie_notice_options[app_key]" value="' . esc_attr( Cookie_Notice()->options['general']['app_key'] ) . '" />
-			<p class="description">' . __( 'Enter your Cooking Compliance&trade; application secret key.', 'cookie-notice' ) . '</p>
+			<p class="description">' . __( 'Enter your Cookie Compliance&trade; application secret key.', 'cookie-notice' ) . '</p>
 		</div>';
+	}
+	
+	/**
+	 * App autoblocking.
+	 */
+	public function cn_app_blocking() {
+		echo '
+		<fieldset>
+			<label for="cn_app_blocking"><input id="cn_app_blocking" type="checkbox" name="cookie_notice_options[app_blocking]" value="1" ' . checked( true, Cookie_Notice()->options['general']['app_blocking'], false ) . ' />' . __( 'Enable to automatically block 3rd party scripts before user consent.', 'cookie-notice' ) . '</label>
+			<p class="description">' . __( "In case you're experiencing issues with your site disable that feature temporarily.", 'cookie-notice' ) . '</p>
+		</fieldset>';
 	}
 	
 	/**
@@ -994,67 +1018,73 @@ class Cookie_Notice_Settings {
 		if ( ! current_user_can( apply_filters( 'cn_manage_cookie_notice_cap', 'manage_options' ) ) )
 			return $input;
 
+		// get main instance
+		$cn = Cookie_Notice();
+
 		if ( isset( $_POST['save_cookie_notice_options'] ) ) {
 			// app id
-			$input['app_id'] = sanitize_text_field( isset( $input['app_id'] ) ? $input['app_id'] : Cookie_Notice()->defaults['general']['app_id'] );
+			$input['app_id'] = sanitize_text_field( isset( $input['app_id'] ) ? $input['app_id'] : $cn->defaults['general']['app_id'] );
 			
 			// app key
-			$input['app_key'] = sanitize_text_field( isset( $input['app_key'] ) ? $input['app_key'] : Cookie_Notice()->defaults['general']['app_key'] );
+			$input['app_key'] = sanitize_text_field( isset( $input['app_key'] ) ? $input['app_key'] : $cn->defaults['general']['app_key'] );
 			
 			// set app status
 			if ( ! empty( $input['app_id'] ) && ! empty( $input['app_key'] ) ) {
-				$app_status = esc_attr( Cookie_Notice()->welcome_api->get_app_status( $input['app_id'] ) );
+				$app_status = esc_attr( $cn->welcome_api->get_app_status( $input['app_id'] ) );
 				
 				update_option( 'cookie_notice_status', $app_status );
 			} else {
 				update_option( 'cookie_notice_status', '' );
 			}
 			
+			// app blocking
+			$input['app_blocking'] = (bool) isset( $input['app_blocking'] );
+			
 			// position
-			$input['position'] = sanitize_text_field( isset( $input['position'] ) && in_array( $input['position'], array_keys( $this->positions ) ) ? $input['position'] : Cookie_Notice()->defaults['general']['position'] );
+			$input['position'] = sanitize_text_field( isset( $input['position'] ) && in_array( $input['position'], array_keys( $this->positions ) ) ? $input['position'] : $cn->defaults['general']['position'] );
 
 			// colors
-			$input['colors']['text'] = sanitize_text_field( isset( $input['colors']['text'] ) && $input['colors']['text'] !== '' && preg_match( '/^#[a-f0-9]{6}$/', $input['colors']['text'] ) === 1 ? $input['colors']['text'] : Cookie_Notice()->defaults['general']['colors']['text'] );
-			$input['colors']['bar'] = sanitize_text_field( isset( $input['colors']['bar'] ) && $input['colors']['bar'] !== '' && preg_match( '/^#[a-f0-9]{6}$/', $input['colors']['bar'] ) === 1 ? $input['colors']['bar'] : Cookie_Notice()->defaults['general']['colors']['bar'] );
-			$input['colors']['bar_opacity'] = absint( isset( $input['colors']['bar_opacity'] ) && $input['colors']['bar_opacity'] >= 50 ? $input['colors']['bar_opacity'] : Cookie_Notice()->defaults['general']['colors']['bar_opacity'] );
+			$input['colors']['text'] = sanitize_text_field( isset( $input['colors']['text'] ) && $input['colors']['text'] !== '' && preg_match( '/^#[a-f0-9]{6}$/', $input['colors']['text'] ) === 1 ? $input['colors']['text'] : $cn->defaults['general']['colors']['text'] );
+			$input['colors']['bar'] = sanitize_text_field( isset( $input['colors']['bar'] ) && $input['colors']['bar'] !== '' && preg_match( '/^#[a-f0-9]{6}$/', $input['colors']['bar'] ) === 1 ? $input['colors']['bar'] : $cn->defaults['general']['colors']['bar'] );
+			$input['colors']['bar_opacity'] = absint( isset( $input['colors']['bar_opacity'] ) && $input['colors']['bar_opacity'] >= 50 ? $input['colors']['bar_opacity'] : $cn->defaults['general']['colors']['bar_opacity'] );
 
 			// texts
-			$input['message_text'] = wp_kses_post( isset( $input['message_text'] ) && $input['message_text'] !== '' ? $input['message_text'] : Cookie_Notice()->defaults['general']['message_text'] );
-			$input['accept_text'] = sanitize_text_field( isset( $input['accept_text'] ) && $input['accept_text'] !== '' ? $input['accept_text'] : Cookie_Notice()->defaults['general']['accept_text'] );
-			$input['refuse_text'] = sanitize_text_field( isset( $input['refuse_text'] ) && $input['refuse_text'] !== '' ? $input['refuse_text'] : Cookie_Notice()->defaults['general']['refuse_text'] );
-			$input['revoke_message_text'] = wp_kses_post( isset( $input['revoke_message_text'] ) && $input['revoke_message_text'] !== '' ? $input['revoke_message_text'] : Cookie_Notice()->defaults['general']['revoke_message_text'] );
-			$input['revoke_text'] = sanitize_text_field( isset( $input['revoke_text'] ) && $input['revoke_text'] !== '' ? $input['revoke_text'] : Cookie_Notice()->defaults['general']['revoke_text'] );
+			$input['message_text'] = wp_kses_post( isset( $input['message_text'] ) && $input['message_text'] !== '' ? $input['message_text'] : $cn->defaults['general']['message_text'] );
+			$input['accept_text'] = sanitize_text_field( isset( $input['accept_text'] ) && $input['accept_text'] !== '' ? $input['accept_text'] : $cn->defaults['general']['accept_text'] );
+			$input['refuse_text'] = sanitize_text_field( isset( $input['refuse_text'] ) && $input['refuse_text'] !== '' ? $input['refuse_text'] : $cn->defaults['general']['refuse_text'] );
+			$input['revoke_message_text'] = wp_kses_post( isset( $input['revoke_message_text'] ) && $input['revoke_message_text'] !== '' ? $input['revoke_message_text'] : $cn->defaults['general']['revoke_message_text'] );
+			$input['revoke_text'] = sanitize_text_field( isset( $input['revoke_text'] ) && $input['revoke_text'] !== '' ? $input['revoke_text'] : $cn->defaults['general']['revoke_text'] );
 			$input['refuse_opt'] = (bool) isset( $input['refuse_opt'] );
 			$input['revoke_cookies'] = isset( $input['revoke_cookies'] );
-			$input['revoke_cookies_opt'] = isset( $input['revoke_cookies_opt'] ) && array_key_exists( $input['revoke_cookies_opt'], $this->revoke_opts ) ? $input['revoke_cookies_opt'] : Cookie_Notice()->defaults['general']['revoke_cookies_opt'];
+			$input['revoke_cookies_opt'] = isset( $input['revoke_cookies_opt'] ) && array_key_exists( $input['revoke_cookies_opt'], $this->revoke_opts ) ? $input['revoke_cookies_opt'] : $cn->defaults['general']['revoke_cookies_opt'];
 
 			// get allowed HTML
-			$allowed_html = Cookie_Notice()->get_allowed_html();
+			$allowed_html = $cn->get_allowed_html();
 
 			// body refuse code
-			$input['refuse_code'] = wp_kses( isset( $input['refuse_code'] ) && $input['refuse_code'] !== '' ? $input['refuse_code'] : Cookie_Notice()->defaults['general']['refuse_code'], $allowed_html );
+			$input['refuse_code'] = wp_kses( isset( $input['refuse_code'] ) && $input['refuse_code'] !== '' ? $input['refuse_code'] : $cn->defaults['general']['refuse_code'], $allowed_html );
 
 			// head refuse code
-			$input['refuse_code_head'] = wp_kses( isset( $input['refuse_code_head'] ) && $input['refuse_code_head'] !== '' ? $input['refuse_code_head'] : Cookie_Notice()->defaults['general']['refuse_code_head'], $allowed_html );
+			$input['refuse_code_head'] = wp_kses( isset( $input['refuse_code_head'] ) && $input['refuse_code_head'] !== '' ? $input['refuse_code_head'] : $cn->defaults['general']['refuse_code_head'], $allowed_html );
 
 			// css button style
-			$input['css_style'] = sanitize_text_field( isset( $input['css_style'] ) && in_array( $input['css_style'], array_keys( $this->styles ) ) ? $input['css_style'] : Cookie_Notice()->defaults['general']['css_style'] );
+			$input['css_style'] = sanitize_text_field( isset( $input['css_style'] ) && in_array( $input['css_style'], array_keys( $this->styles ) ) ? $input['css_style'] : $cn->defaults['general']['css_style'] );
 
 			// css button class
-			$input['css_class'] = sanitize_text_field( isset( $input['css_class'] ) ? $input['css_class'] : Cookie_Notice()->defaults['general']['css_class'] );
+			$input['css_class'] = sanitize_text_field( isset( $input['css_class'] ) ? $input['css_class'] : $cn->defaults['general']['css_class'] );
 
 			// link target
-			$input['link_target'] = sanitize_text_field( isset( $input['link_target'] ) && in_array( $input['link_target'], array_keys( $this->link_targets ) ) ? $input['link_target'] : Cookie_Notice()->defaults['general']['link_target'] );
+			$input['link_target'] = sanitize_text_field( isset( $input['link_target'] ) && in_array( $input['link_target'], array_keys( $this->link_targets ) ) ? $input['link_target'] : $cn->defaults['general']['link_target'] );
 
 			// time
-			$input['time'] = sanitize_text_field( isset( $input['time'] ) && in_array( $input['time'], array_keys( $this->times ) ) ? $input['time'] : Cookie_Notice()->defaults['general']['time'] );
-			$input['time_rejected'] = sanitize_text_field( isset( $input['time_rejected'] ) && in_array( $input['time_rejected'], array_keys( $this->times ) ) ? $input['time_rejected'] : Cookie_Notice()->defaults['general']['time_rejected'] );
+			$input['time'] = sanitize_text_field( isset( $input['time'] ) && in_array( $input['time'], array_keys( $this->times ) ) ? $input['time'] : $cn->defaults['general']['time'] );
+			$input['time_rejected'] = sanitize_text_field( isset( $input['time_rejected'] ) && in_array( $input['time_rejected'], array_keys( $this->times ) ) ? $input['time_rejected'] : $cn->defaults['general']['time_rejected'] );
 
 			// script placement
-			$input['script_placement'] = sanitize_text_field( isset( $input['script_placement'] ) && in_array( $input['script_placement'], array_keys( $this->script_placements ) ) ? $input['script_placement'] : Cookie_Notice()->defaults['general']['script_placement'] );
+			$input['script_placement'] = sanitize_text_field( isset( $input['script_placement'] ) && in_array( $input['script_placement'], array_keys( $this->script_placements ) ) ? $input['script_placement'] : $cn->defaults['general']['script_placement'] );
 
 			// hide effect
-			$input['hide_effect'] = sanitize_text_field( isset( $input['hide_effect'] ) && in_array( $input['hide_effect'], array_keys( $this->effects ) ) ? $input['hide_effect'] : Cookie_Notice()->defaults['general']['hide_effect'] );
+			$input['hide_effect'] = sanitize_text_field( isset( $input['hide_effect'] ) && in_array( $input['hide_effect'], array_keys( $this->effects ) ) ? $input['hide_effect'] : $cn->defaults['general']['hide_effect'] );
 			
 			// redirection
 			$input['redirection'] = isset( $input['redirection'] );
@@ -1063,7 +1093,7 @@ class Cookie_Notice_Settings {
 			$input['on_scroll'] = isset( $input['on_scroll'] );
 
 			// on scroll offset
-			$input['on_scroll_offset'] = absint( isset( $input['on_scroll_offset'] ) && $input['on_scroll_offset'] !== '' ? $input['on_scroll_offset'] : Cookie_Notice()->defaults['general']['on_scroll_offset'] );
+			$input['on_scroll_offset'] = absint( isset( $input['on_scroll_offset'] ) && $input['on_scroll_offset'] !== '' ? $input['on_scroll_offset'] : $cn->defaults['general']['on_scroll_offset'] );
 			
 			// on click
 			$input['on_click'] = isset( $input['on_click'] );
@@ -1073,8 +1103,8 @@ class Cookie_Notice_Settings {
 
 			// privacy policy
 			$input['see_more'] = isset( $input['see_more'] );
-			$input['see_more_opt']['text'] = sanitize_text_field( isset( $input['see_more_opt']['text'] ) && $input['see_more_opt']['text'] !== '' ? $input['see_more_opt']['text'] : Cookie_Notice()->defaults['general']['see_more_opt']['text'] );
-			$input['see_more_opt']['link_type'] = sanitize_text_field( isset( $input['see_more_opt']['link_type'] ) && in_array( $input['see_more_opt']['link_type'], array_keys( $this->links ) ) ? $input['see_more_opt']['link_type'] : Cookie_Notice()->defaults['general']['see_more_opt']['link_type'] );
+			$input['see_more_opt']['text'] = sanitize_text_field( isset( $input['see_more_opt']['text'] ) && $input['see_more_opt']['text'] !== '' ? $input['see_more_opt']['text'] : $cn->defaults['general']['see_more_opt']['text'] );
+			$input['see_more_opt']['link_type'] = sanitize_text_field( isset( $input['see_more_opt']['link_type'] ) && in_array( $input['see_more_opt']['link_type'], array_keys( $this->links ) ) ? $input['see_more_opt']['link_type'] : $cn->defaults['general']['see_more_opt']['link_type'] );
 
 			if ( $input['see_more_opt']['link_type'] === 'custom' )
 				$input['see_more_opt']['link'] = ( $input['see_more'] === true ? esc_url( $input['see_more_opt']['link'] ) : '' );
@@ -1087,14 +1117,14 @@ class Cookie_Notice_Settings {
 			}
 			
 			// policy link position
-			$input['link_position'] = sanitize_text_field( isset( $input['link_position'] ) && in_array( $input['link_position'], array_keys( $this->link_positions ) ) ? $input['link_position'] : Cookie_Notice()->defaults['general']['link_position'] );
+			$input['link_position'] = sanitize_text_field( isset( $input['link_position'] ) && in_array( $input['link_position'], array_keys( $this->link_positions ) ) ? $input['link_position'] : $cn->defaults['general']['link_position'] );
 
 			// message link position?
 			if ( $input['see_more'] === true && $input['link_position'] === 'message' && strpos( $input['message_text'], '[cookies_policy_link' ) === false )
 				$input['message_text'] .= ' [cookies_policy_link]';
 			
-			$input['update_version'] = Cookie_Notice()->options['general']['update_version'];
-			$input['update_notice'] = Cookie_Notice()->options['general']['update_notice'];
+			$input['update_version'] = $cn->options['general']['update_version'];
+			$input['update_notice'] = $cn->options['general']['update_notice'];
 
 			$input['translate'] = false;
 
@@ -1111,14 +1141,14 @@ class Cookie_Notice_Settings {
 					do_action( 'wpml_register_single_string', 'Cookie Notice', 'Custom link', $input['see_more_opt']['link'] );
 			}
 			
+			add_settings_error( 'cn_cookie_notice_options', 'save_cookie_notice_options', __( 'Settings saved.', 'iubenda' ), 'updated' );
+			
 			// purge cache on save
 			delete_transient( 'cookie_notice_compliance_cache' );
-			
 		} elseif ( isset( $_POST['reset_cookie_notice_options'] ) ) {
-			
-			$input = Cookie_Notice()->defaults['general'];
+			$input = $cn->defaults['general'];
 
-			add_settings_error( 'reset_cookie_notice_options', 'reset_cookie_notice_options', __( 'Settings restored to defaults.', 'cookie-notice' ), 'updated' );
+			add_settings_error( 'cn_cookie_notice_options', 'reset_cookie_notice_options', __( 'Settings restored to defaults.', 'cookie-notice' ), 'updated' );
 			
 			// set app status
 			update_option( 'cookie_notice_status', '' );
@@ -1134,7 +1164,7 @@ class Cookie_Notice_Settings {
 	 * Load scripts and styles - admin.
 	 */
 	public function admin_enqueue_scripts( $page ) {
-		if ( $page !== 'settings_page_cookie-notice' )
+		if ( $page !== 'toplevel_page_cookie-notice' )
 			return;
 
 		wp_enqueue_script(
@@ -1154,22 +1184,43 @@ class Cookie_Notice_Settings {
 	}
 	
 	/**
+	 * Load admin style inline, for menu icon only.
+	 *
+	 * @return mixed
+	 */
+	public function admin_print_styles() {
+		echo '
+		<style>
+			a.toplevel_page_cookie-notice .wp-menu-image {
+				background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+PCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj48c3ZnIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAzMjEgMzIxIiB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHhtbDpzcGFjZT0icHJlc2VydmUiIHhtbG5zOnNlcmlmPSJodHRwOi8vd3d3LnNlcmlmLmNvbS8iIHN0eWxlPSJmaWxsLXJ1bGU6ZXZlbm9kZDtjbGlwLXJ1bGU6ZXZlbm9kZDtzdHJva2UtbGluZWpvaW46cm91bmQ7c3Ryb2tlLW1pdGVybGltaXQ6MjsiPjxwYXRoIGQ9Ik0zMTcuMjc4LDEzMC40NTFjLTAuODEyLC00LjMwMiAtNC4zMDEsLTcuNTYyIC04LjY0MiwtOC4wODFjLTQuMzU0LC0wLjUyMiAtOC41MDYsMS44MjkgLTEwLjMwNyw1LjgyMmMtMy4xNyw3LjAwMyAtMTAuMTMzLDExLjg3MyAtMTguMjA1LDExLjg2NGMtOC45NTUsMC4wMjIgLTE2LjUxNywtNi4wMjEgLTE5LjAzOCwtMTQuMzE1Yy0xLjUyMSwtNS4wNjMgLTYuNzI0LC04LjA2NCAtMTEuODY1LC02Ljg2M2MtMy4xNjMsMC43NDEgLTYuMTU0LDEuMTcyIC05LjEyNSwxLjE3MmMtMjIuMDM5LC0wLjA0MyAtMzkuOTc2LC0xNy45NzkgLTQwLjAxNSwtNDAuMDE5Yy0wLC0yLjk3IDAuNDMsLTUuOTYyIDEuMTY5LC05LjExM2MxLjIxMiwtNS4xNDEgLTEuNzk5LC0xMC4zNTMgLTYuODYsLTExLjg3M2MtOC4yOTUsLTIuNTEzIC0xNC4zMzcsLTEwLjA3NSAtMTQuMzE5LC0xOS4wMjljLTAuMDA5LC04LjA4MiA0Ljg2NCwtMTUuMDM2IDExLjg2NywtMTguMjA4YzMuOTkxLC0xLjc5OCA2LjM0MSwtNS45NjMgNS44MjIsLTEwLjMwNGMtMC41MjIsLTQuMzUxIC0zLjc4MywtNy44NDMgLTguMDg0LC04LjY1MmMtOS41NDMsLTEuNzkyIC0xOS40MjYsLTIuODUyIC0yOS42MTEsLTIuODUyYy04OC4yOTUsMC4wMjIgLTE2MC4wNDMsNzEuNzcgLTE2MC4wNjUsMTYwLjA2NWMwLjAyMiw4OC4yOTUgNzEuNzcsMTYwLjA0MyAxNjAuMDY1LDE2MC4wNjVjODguMjk1LC0wLjAyMiAxNjAuMDQzLC03MS43NyAxNjAuMDY1LC0xNjAuMDY1Yy0wLC0xMC4xODQgLTEuMDYzLC0yMC4wNjcgLTIuODUyLC0yOS42MTRabS01OC4yMjMsMTI4LjYwNGMtMjUuNDAxLDI1LjM4IC02MC4zNTUsNDEuMDY2IC05OC45OSw0MS4wNjZjLTM4LjYzNSwwIC03My41ODgsLTE1LjY4NiAtOTguOTg5LC00MS4wNjZjLTI1LjM4LC0yNS40MDEgLTQxLjA2NiwtNjAuMzU1IC00MS4wNjYsLTk4Ljk5Yy0wLC0zOC42MzUgMTUuNjg2LC03My41ODggNDEuMDY2LC05OC45ODljMjUuNDAxLC0yNS4zOCA2MC4zNTQsLTQxLjA2NiA5OC45ODksLTQxLjA2NmMxLjgwMSwwIDMuNTYsMC4xODkgNS4zNTIsMC4yNjhjLTMuMzQzLDUuODIzIC01LjM0MywxMi41MjcgLTUuMzUyLDE5LjczOGMwLjAxOCwxNC45MzUgOC4zMDQsMjcuNzQyIDIwLjM3OSwzNC41NzVjLTAuMTkyLDEuNzggLTAuMzczLDMuNTYgLTAuMzczLDUuNDRjMC4wMjIsMzMuMTI1IDI2LjkwMyw2MC4wMDcgNjAuMDI1LDYwLjAyNWMxLjg4LDAgMy42NjQsLTAuMTggNS40NDMsLTAuMzY5YzYuODMzLDEyLjA2NSAxOS42MjgsMjAuMzU2IDM0LjU3MiwyMC4zNzhjNy4yMTUsLTAuMDA5IDEzLjkxNiwtMi4wMTEgMTkuNzQxLC01LjM1MmMwLjA4LDEuNzggMC4yNjksMy41NTEgMC4yNjksNS4zNTJjLTAsMzguNjM1IC0xNS42ODYsNzMuNTg5IC00MS4wNjYsOTguOTlabS01OC45NzQsLTE4Ljk1OWMtMCwxMS4wNTIgLTguOTU4LDIwLjAxIC0yMC4wMSwyMC4wMWMtMTEuMDQ4LC0wIC0yMC4wMDUsLTguOTU4IC0yMC4wMDUsLTIwLjAxYy0wLC0xMS4wNDkgOC45NTcsLTIwLjAwNiAyMC4wMDUsLTIwLjAwNmMxMS4wNTIsLTAgMjAuMDEsOC45NTcgMjAuMDEsMjAuMDA2Wm0tODAuMDMxLC0xMC4wMDVjMCw1LjUyNiAtNC40NzksMTAuMDA1IC0xMC4wMDUsMTAuMDA1Yy01LjUyNiwtMCAtMTAuMDA1LC00LjQ3OSAtMTAuMDA1LC0xMC4wMDVjMCwtNS41MjMgNC40NzksLTEwLjAwMSAxMC4wMDUsLTEwLjAwMWM1LjUyNiwtMCAxMC4wMDUsNC40NzggMTAuMDA1LDEwLjAwMVptMTQwLjA1NSwtMjAuMDA2YzAsNS41MjYgLTQuNDc5LDEwLjAwNSAtMTAuMDA1LDEwLjAwNWMtNS41MjUsMCAtMTAuMDA1LC00LjQ3OSAtMTAuMDA1LC0xMC4wMDVjMCwtNS41MjYgNC40OCwtMTAuMDA1IDEwLjAwNSwtMTAuMDA1YzUuNTI2LDAgMTAuMDA1LDQuNDc5IDEwLjAwNSwxMC4wMDVabS0xNjAuMDY0LC01MC4wMmMtMCwxMS4wNDggLTguOTU3LDIwLjAwNiAtMjAuMDEsMjAuMDA2Yy0xMS4wNDgsMCAtMjAuMDA1LC04Ljk1OCAtMjAuMDA1LC0yMC4wMDZjLTAsLTExLjA1MiA4Ljk1NywtMjAuMDEgMjAuMDA1LC0yMC4wMWMxMS4wNTMsMCAyMC4wMSw4Ljk1OCAyMC4wMSwyMC4wMVptODAuMDMsMTAuMDA1YzAsNS41MjMgLTQuNDc4LDEwLjAwMSAtMTAuMDAxLDEwLjAwMWMtNS41MjYsMCAtMTAuMDA1LC00LjQ3OCAtMTAuMDA1LC0xMC4wMDFjMCwtNS41MjYgNC40NzksLTEwLjAwNSAxMC4wMDUsLTEwLjAwNWM1LjUyMywwIDEwLjAwMSw0LjQ3OSAxMC4wMDEsMTAuMDA1Wm0xMTUuNDkzLC02OS40MDZjMCw1LjUyNiAtNC40NzksMTAuMDA1IC0xMC4wMDUsMTAuMDA1Yy01LjUyNiwtMCAtMTAuMDA1LC00LjQ3OSAtMTAuMDA1LC0xMC4wMDVjMCwtNS41MjYgNC40NzksLTEwLjAwNSAxMC4wMDUsLTEwLjAwNWM1LjUyNiwtMCAxMC4wMDUsNC40NzkgMTAuMDA1LDEwLjAwNVptLTM1LjUyMywtMTkuODc0Yy0wLDExLjUwMyAtOS4zMjUsMjAuODI4IC0yMC44MjgsMjAuODI4Yy0xMS41MDQsLTAgLTIwLjgyOSwtOS4zMjUgLTIwLjgyOSwtMjAuODI4Yy0wLC0xMS41MDMgOS4zMjUsLTIwLjgyOCAyMC44MjksLTIwLjgyOGMxMS41MDMsLTAgMjAuODI4LDkuMzI1IDIwLjgyOCwyMC44MjhabS0xMTkuOTg1LC0wLjc1OWMtMCwxMS4wNTIgLTguOTU3LDIwLjAxIC0yMC4wMDYsMjAuMDFjLTExLjA1MiwtMCAtMjAuMDA5LC04Ljk1OCAtMjAuMDA5LC0yMC4wMWMtMCwtMTEuMDQ4IDguOTU3LC0yMC4wMDYgMjAuMDA5LC0yMC4wMDZjMTEuMDQ5LC0wIDIwLjAwNiw4Ljk1OCAyMC4wMDYsMjAuMDA2WiIgc3R5bGU9ImZpbGw6I2ZmZjtmaWxsLXJ1bGU6bm9uemVybzsiLz48L3N2Zz4=);
+				background-position: center center;
+				background-repeat: no-repeat;
+				background-size: 18px auto;
+			}
+		</style>
+		';
+	}
+	
+	/**
 	 * Register WPML (>= 3.2) strings if needed.
 	 *
 	 * @return	void
 	 */
 	private function register_wpml_strings() {
+		// get main instance
+		$cn = Cookie_Notice();
+
 		global $wpdb;
 
 		// prepare strings
 		$strings = array(
-			'Message in the notice'	=> $this->options['general']['message_text'],
-			'Button text'			=> $this->options['general']['accept_text'],
-			'Refuse button text'	=> $this->options['general']['refuse_text'],
-			'Revoke message text'	=> $this->options['general']['revoke_message_text'],
-			'Revoke button text'	=> $this->options['general']['revoke_text'],
-			'Privacy policy text'	=> $this->options['general']['see_more_opt']['text'],
-			'Custom link'			=> $this->options['general']['see_more_opt']['link']
+			'Message in the notice'	=> $cn->options['general']['message_text'],
+			'Button text'			=> $cn->options['general']['accept_text'],
+			'Refuse button text'	=> $cn->options['general']['refuse_text'],
+			'Revoke message text'	=> $cn->options['general']['revoke_message_text'],
+			'Revoke button text'	=> $cn->options['general']['revoke_text'],
+			'Privacy policy text'	=> $cn->options['general']['see_more_opt']['text'],
+			'Custom link'			=> $cn->options['general']['see_more_opt']['link']
 		);
 
 		// get query results
@@ -1183,6 +1234,21 @@ class Cookie_Notice_Settings {
 				do_action( 'wpml_register_single_string', 'Cookie Notice', $string, $value );
 			}
 		}
+	}
+	
+	/**
+	 * Display errors and notices.
+	 *
+	 * @global string $pagenow
+	 */
+	public function settings_errors() {
+		global $pagenow;
+
+		// force display notices in top menu settings page
+		if ( $pagenow == 'options-general.php' )
+			return;
+
+		settings_errors( 'cn_cookie_notice_options' );
 	}
 	
 	/**

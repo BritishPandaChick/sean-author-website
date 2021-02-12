@@ -151,8 +151,6 @@ class Cookie_Notice_Welcome {
 
 		if ( $is_ajax && ! check_ajax_referer( 'cookie-notice-welcome', 'nonce' ) )
 			wp_die( _( 'You do not have permission to access this page.', 'cookie-notice' ) );
-		
-		$logo_url = plugins_url( '../img/cookie-compliance-logo.png', __FILE__ );
 
 		// get token data
 		$token_data = get_transient( 'cookie_notice_app_token' );
@@ -175,10 +173,10 @@ class Cookie_Notice_Welcome {
 								<p>' . __( 'An all new web application to help you deliver better consent experiences and comply with GDPR and CCPA more effectively.', 'cookie-notice' ) . '</p>
 							</div>
 							<div class="cn-hero-image">
-								<img src="' . plugins_url( '../img/screen-dashboard.png', __FILE__ ) . '">
+								<img src="//cno0-53eb.kxcdn.com/screen-dashboard.png" alt="Cookie Compliance dashboard" />
 							</div>
 							<div class="cn-lead">
-								<p>' . __( 'Digital Factory - the original developers of Cookie Notice - has joined forces with <a href="https://hu-manity.co" target="_blank" class="cn-link">Hu-manity.co</a>, the company known for introducing the 31st Human Right, to launch the Cookie Compliance&trade; web application.', 'cookie-notice' ) . '</p>
+								<p>' . sprintf( __( 'Digital Factory - the original developers of Cookie Notice - has joined forces with %s, the company known for introducing the 31st Human Right, to launch the Cookie Compliance&trade; web application.', 'cookie-notice' ), '<a href="https://hu-manity.co" target="_blank" class="cn-link">Hu-manity.co</a>' ) . '</p>
 							</div>
 						</div>
 					</div>
@@ -213,7 +211,7 @@ class Cookie_Notice_Welcome {
 										<img src="' . plugins_url( '../img/cookie-notice-logo-dark.png', __FILE__ ) . '">
 										<span class="cn-badge">' . __( 'WP Plugin', 'cookie-notice' ) . '</span>
 									</div>
-									<img src="' . plugins_url( '../img/screen-notice.png', __FILE__ ) . '">
+									<img src="//cno0-53eb.kxcdn.com/screen-notice.png" alt="Cookie Notice dashboard" />
 									<ul>
 										<li><span>' . __( 'Customizable notice message', 'cookie-notice' ) . '</span></li>
 										<li><span>' . __( 'Consent on click, scroll or close', 'cookie-notice' ) . '</span></li>
@@ -222,14 +220,14 @@ class Cookie_Notice_Welcome {
 									</ul>
 								</div>
 								<div class="cn-flex-item">
-									<img src="' . plugins_url( '../img/screen-plus.png', __FILE__ ) . '">
+									<img src="//cno0-53eb.kxcdn.com/screen-plus.png" alt="Cookie Notice + Compliance" />
 								</div>
 								<div class="cn-flex-item">
 									<div class="cn-logo-container">
 										<img src="' . plugins_url( '../img/cookie-compliance-logo-dark.png', __FILE__ ) . '">
 										<span class="cn-badge">' . __( 'Web App', 'cookie-notice' ) . '</span>
 									</div>
-									<img src="' . plugins_url( '../img/screen-compliance.png', __FILE__ ) . '">
+									<img src="//cno0-53eb.kxcdn.com/screen-compliance.png"alt="Cookie Compliance dashboard" />
 									<ul>
 										<li><span>' . __( 'Customizable <b>GDPR & CCPA</b> notice templates', 'cookie-notice' ) . '</span></li>
 										<li><span>' . __( '<b>Consent Analytics</b> Dashboard', 'cookie-notice' ) . '</span></li>
@@ -281,7 +279,7 @@ class Cookie_Notice_Welcome {
 					<div class="cn-inner">
 						<div class="cn-header">
 							<div class="cn-top-bar">
-								<div class="cn-logo"><img src="' . $logo_url . '"></div>
+								<div class="cn-logo"><img src="//cno1-53eb.kxcdn.com/cookie-compliance-logo.png" alt="Cookie Compliance logo" /></div>
 							</div>	
 						</div>
 						<div class="cn-body">
@@ -303,12 +301,12 @@ class Cookie_Notice_Welcome {
 					<div class="cn-inner">
 						<div class="cn-header">
 							<div class="cn-top-bar">
-								<div class="cn-logo"><img src="' . $logo_url . '"></div>
+								<div class="cn-logo"><img src="//cno2-53eb.kxcdn.com/cookie-compliance-logo.png" alt="Cookie Compliance logo" /></div>
 							</div>	
 						</div>
 						<div class="cn-body">
 							<h2>' . __( 'Compliance Live Demo', 'cookie-notice' ) . '</h2>
-							<div class="cn-lead"><p>' . __( 'Simulate the upgraded Cookie Compliance&trade; design and compliance features through the options below. Click Save & Upgrade to create your Cookie Compliance&trade; account.', 'cookie-notice' ) . '</p></div>
+							<div class="cn-lead"><p>' . __( 'Simulate the upgraded Cookie Compliance&trade; design and compliance features through the options below. Click Add Copmliance to save the configuration and go to creating your Cookie Compliance&trade; account.', 'cookie-notice' ) . '</p></div>
 							<form id="cn-form-configure" class="cn-form" action="" data-action="configure">
 								<div class="cn-accordion">
 									<div class="cn-accordion-item cn-form-container">
@@ -392,17 +390,17 @@ class Cookie_Notice_Welcome {
 					<div class="cn-inner">
 						<div class="cn-header">
 							<div class="cn-top-bar">
-								<div class="cn-logo"><img src="' . $logo_url . '"></div>
+								<div class="cn-logo"><img src="//cno3-53eb.kxcdn.com/cookie-compliance-logo.png" alt="Cookie Compliance logo" /></div>
 							</div>	
 						</div>
 						<div class="cn-body">
 							<h2>' . __( 'GDPR & CCPA Upgrade Ready', 'cookie-notice' ) . '</h2>
 							<div class="cn-lead">
-								<p>' . __( 'Create an account to start using Cooking Compliance&trade; - The next generation of Cookie Notice.', 'cookie-notice' ) . '</p>
+								<p>' . __( 'To start using The Next Generation of Cookie Notice create a Cookie Compliance&trade; account. Then you will be asked to select plan and authorize your subscription.', 'cookie-notice' ) . '</p>
 							</div>
 							<div class="cn-accordion">
 								<div id="cn-accordion-account" class="cn-accordion-item cn-form-container">
-									<div class="cn-accordion-header cn-form-header"><button class="cn-accordion-button" type="button">' . __( 'Compliance Account', 'cookie-notice' ) . '</button></div>
+									<div class="cn-accordion-header cn-form-header"><button class="cn-accordion-button" type="button">' . __( 'Create Account', 'cookie-notice' ) . '</button></div>
 									<div class="cn-accordion-collapse">
 										<form class="cn-form" action="" data-action="register">
 											<div class="cn-form-feedback cn-hidden"></div>
@@ -417,7 +415,7 @@ class Cookie_Notice_Welcome {
 											</div>
 											<div class="cn-field cn-field-checkbox">
 												<div class="cn-checkbox-wrapper">
-													<label for="cn_terms"><input id="cn_terms" type="checkbox" name="terms" value="1"><span>' . __( 'I have read and agree to the', 'cookie-notice' ) . ' <a href="https://hu-manity.co/cookiecompliance-terms/" target="_blank">' . __( 'Terms of Service', 'cookie-notice' ) . '</a></span></label>
+													<label for="cn_terms"><input id="cn_terms" type="checkbox" name="terms" value="1"><span>' . sprintf( __( 'I have read and agree to the <a href="%s" target="_blank">Terms of Service', 'cookie-notice' ), 'https://hu-manity.co/cookiecompliance-terms/' ) . '</a></span></label>
 													</div>
 											</div>
 											<div class="cn-field cn-field-submit cn-nav">
@@ -435,23 +433,23 @@ class Cookie_Notice_Welcome {
 
 				$html .= '
 										</form>
-										<p>' . __( 'Already have an account? <a href="#" class="cn-screen-button" data-screen="login">Sign in</a>', 'cookie-notice' ) . '</p>
+										<p>' . __( 'Already have an account?', 'cookie-notice' ) . ' <a href="#" class="cn-screen-button" data-screen="login">' . __( 'Sign in', 'cookie-notice' ). '</a></p>
 									</div>
 								</div>
-								<div id="cn-accordion-billing" class="cn-accordion-item cn-form-container cn-collapsed cn-disabled">
+								<div id="cn-accordion-billing" class="cn-accordion-item cn-form-container cn-disabled">
 									<div class="cn-accordion-header cn-form-header">
-										<button class="cn-accordion-button" type="button">' . __( 'Compliance Plan', 'cookie-notice' ) . '</button>
+										<button class="cn-accordion-button" type="button">' . __( 'Account Plan', 'cookie-notice' ) . '</button>
 									</div>
-									<form class="cn-accordion-collapse cn-form" action="" data-action="payment">
+									<form class="cn-accordion-collapse cn-form cn-form-disabled" action="" data-action="payment">
 										<div class="cn-form-feedback cn-hidden"></div>
 										<div class="cn-field cn-field-radio">
 											<div class="cn-radio-wrapper cn-plan-wrapper">
-												<label for="cn_field_plan_monthly"><input id="cn_field_plan_monthly" type="radio" name="plan" value="compliance_monthly" checked><span><span class="cn-plan-description">Bill monthly</span><span class="cn-plan-price">$14.95<span class="cn-plan-period">' . __( '/mo', 'cookie-notice' ) . '</span></span><span class="cn-plan-overlay"></span></span></label>
-												<label for="cn_field_plan_yearly"><input id="cn_field_plan_yearly" type="radio" name="plan" value="compliance_yearly"><span><span class="cn-plan-description">Bill yearly <span class="cn-price-off">(15% off)</span></span><span class="cn-plan-price">$149.50<span class="cn-plan-period">' . __( '/yr', 'cookie-notice' ) . '</span></span><span class="cn-plan-overlay"></span></span></label>
+												<label for="cn_field_plan_monthly"><input id="cn_field_plan_monthly" type="radio" name="plan" value="compliance_monthly" checked><span><span class="cn-plan-description">' . __( '<b>14 days</b> Free Trial', 'cookie-notice' ) . '</span><span class="cn-plan-pricing">then <span class="cn-plan-price">$14.95</span>' . __( '/mo', 'cookie-notice' ) . '</span><span class="cn-plan-overlay"></span></span></label>
+												<label for="cn_field_plan_yearly"><input id="cn_field_plan_yearly" type="radio" name="plan" value="compliance_yearly"><span><span class="cn-plan-description">' . __( '<b>30 days</b> Free Trial', 'cookie-notice' ) . '</span><span class="cn-plan-pricing">then <span class="cn-plan-price">$149.50</span>' . __( '/yr', 'cookie-notice' ) . ' <span class="cn-price-off">(' . __( '15% off', 'cookie-notice' ) . ')</span></span><span class="cn-plan-overlay"></span></span></label>
 											</div>
 										</div>
 										<div class="cn-field cn-field-radio">
-											<label>' . __( 'Payment Method', 'cookie-notice' ) . '</label>
+											<label>' . __( 'Subscription Method', 'cookie-notice' ) . '</label>
 											<div class="cn-radio-wrapper cn-horizontal-wrapper">
 												<label for="cn_field_method_credit_card"><input id="cn_field_method_credit_card" type="radio" name="method" value="credit_card" checked><span>' . __( 'Credit Card', 'cookie-notice' ) . '</span></label>
 												<label for="cn_field_method_paypal"><input id="cn_field_method_paypal" type="radio" name="method" value="paypal"><span>' . __( 'PayPal', 'cookie-notice' ) . '</span></label>
@@ -472,7 +470,7 @@ class Cookie_Notice_Welcome {
 												<div id="cn_cvv"></div>
 											</div>
 											<div class="cn-field cn-field-submit cn-nav">
-												<button type="submit" class="cn-btn cn-screen-button" tabindex="4" data-screen="4"><span class="cn-spinner"></span>' . __( 'Subscribe', 'cookie-notice' ) . '</button>
+												<button type="submit" class="cn-btn cn-screen-button" tabindex="4" data-screen="4"><span class="cn-spinner"></span>' . __( 'Start Free Trial', 'cookie-notice' ) . '</button>
 											</div>
 										</div>
 										<div class="cn-fieldset" id="cn_payment_method_paypal" style="display: none;">
@@ -492,17 +490,17 @@ class Cookie_Notice_Welcome {
 					<div class="cn-inner">
 						<div class="cn-header">
 							<div class="cn-top-bar">
-								<div class="cn-logo"><img src="' . $logo_url . '"></div>
+								<div class="cn-logo"><img src="//cno3-53eb.kxcdn.com/cookie-compliance-logo.png" alt="Cookie Compliance logo" /></div>
 							</div>	
 						</div>
 						<div class="cn-body">
 							<h2>' . __( 'Compliance Sign in', 'cookie-notice' ) . '</h2>
 							<div class="cn-lead">
-								<p>' . __( 'Sign in to your existing Cooking Compliance&trade; account to upgrade this website.', 'cookie-notice' ) . '</p>
+								<p>' . __( 'Sign in to your existing Cookie Compliance&trade; account to continue upgrading of this website.', 'cookie-notice' ) . '</p>
 							</div>
 							<div class="cn-accordion">
 								<div id="cn-accordion-account" class="cn-accordion-item cn-form-container">
-									<div class="cn-accordion-header cn-form-header"><button class="cn-accordion-button" type="button">' . __( 'Compliance Account', 'cookie-notice' ) . '</button></div>
+									<div class="cn-accordion-header cn-form-header"><button class="cn-accordion-button" type="button">' . __( 'Account Login', 'cookie-notice' ) . '</button></div>
 									<div class="cn-accordion-collapse">
 										<form class="cn-form" action="" data-action="login">
 											<div class="cn-form-feedback cn-hidden"></div>
@@ -527,23 +525,23 @@ class Cookie_Notice_Welcome {
 
 				$html .= '
 										</form>
-										<p>' . __( 'Don\'t have an account yet? <a href="#" class="cn-screen-button" data-screen="register">Sign up</a>', 'cookie-notice' ) . '</p>
+										<p>' . __( 'Don\'t have an account yet?', 'cookie-notice' ) . ' <a href="#" class="cn-screen-button" data-screen="register">' . __( 'Sign up', 'cookie-notice' ) . '</a></p>
 									</div>
 								</div>
-								<div id="cn-accordion-billing" class="cn-accordion-item cn-form-container cn-collapsed cn-disabled">
+								<div id="cn-accordion-billing" class="cn-accordion-item cn-form-container cn-disabled">
 									<div class="cn-accordion-header cn-form-header">
 										<button class="cn-accordion-button" type="button">' . __( 'Compliance Plan', 'cookie-notice' ) . '</button>
 									</div>
-									<form class="cn-accordion-collapse cn-form" action="" data-action="payment">
+									<form class="cn-accordion-collapse cn-form cn-form-disabled" action="" data-action="payment">
 										<div class="cn-form-feedback cn-hidden"></div>
 										<div class="cn-field cn-field-radio">
 											<div class="cn-radio-wrapper cn-plan-wrapper">
-												<label for="cn_field_plan_monthly"><input id="cn_field_plan_monthly" type="radio" name="plan" value="compliance_monthly" checked><span><span class="cn-plan-description">Bill monthly</span><span class="cn-plan-price">$14.95<span class="cn-plan-period">' . __( '/mo', 'cookie-notice' ) . '</span></span><span class="cn-plan-overlay"></span></span></label>
-												<label for="cn_field_plan_yearly"><input id="cn_field_plan_yearly" type="radio" name="plan" value="compliance_yearly"><span><span class="cn-plan-description">Bill yearly <span class="cn-price-off">-(15% off)</span></span><span class="cn-plan-price">$149.50<span class="cn-plan-period">' . __( '/yr', 'cookie-notice' ) . '</span></span><span class="cn-plan-overlay"></span></span></label>
+												<label for="cn_field_plan_monthly"><input id="cn_field_plan_monthly" type="radio" name="plan" value="compliance_monthly" checked><span><span class="cn-plan-description">' . __( '<b>14 days</b> Free Trial', 'cookie-notice' ) . '</span><span class="cn-plan-pricing">then <span class="cn-plan-price">$14.95</span>' . __( '/mo', 'cookie-notice' ) . '</span><span class="cn-plan-overlay"></span></span></label>
+												<label for="cn_field_plan_yearly"><input id="cn_field_plan_yearly" type="radio" name="plan" value="compliance_yearly"><span><span class="cn-plan-description">' . __( '<b>30 days</b> Free Trial', 'cookie-notice' ) . ' <span class="cn-price-off">(15% off)</span></span><span class="cn-plan-pricing">then <span class="cn-plan-price">$149.50</span>' . __( '/yr', 'cookie-notice' ) . '</span><span class="cn-plan-overlay"></span></span></label>
 											</div>
 										</div>
 										<div class="cn-field cn-field-radio">
-											<label>' . __( 'Payment Method', 'cookie-notice' ) . '</label>
+											<label>' . __( 'Subscription Method', 'cookie-notice' ) . '</label>
 											<div class="cn-radio-wrapper cn-horizontal-wrapper">
 												<label for="cn_field_method_credit_card"><input id="cn_field_method_credit_card" type="radio" name="method" value="credit_card" checked><span>' . __( 'Credit Card', 'cookie-notice' ) . '</span></label>
 												<label for="cn_field_method_paypal"><input id="cn_field_method_paypal" type="radio" name="method" value="paypal"><span>' . __( 'PayPal', 'cookie-notice' ) . '</span></label>
@@ -564,7 +562,7 @@ class Cookie_Notice_Welcome {
 												<div id="cn_cvv"></div>
 											</div>
 											<div class="cn-field cn-field-submit cn-nav">
-												<button type="submit" class="cn-btn cn-screen-button" tabindex="4" data-screen="4"><span class="cn-spinner"></span>' . __( 'Subscribe', 'cookie-notice' ) . '</button>
+												<button type="submit" class="cn-btn cn-screen-button" tabindex="4" data-screen="4"><span class="cn-spinner"></span>' . __( 'Start Free Trial', 'cookie-notice' ) . '</button>
 											</div>
 										</div>
 										<div class="cn-fieldset" id="cn_payment_method_paypal" style="display: none;">
@@ -584,12 +582,12 @@ class Cookie_Notice_Welcome {
 					<div class="cn-inner">
 						<div class="cn-header">
 							<div class="cn-top-bar">
-								<div class="cn-logo"><img src="' . $logo_url . '"></div>
+								<div class="cn-logo"><img src="//cno0-53eb.kxcdn.com/cookie-compliance-logo.png" alt="Cookie Compliance logo" /></div>
 							</div>	
 						</div>
 						<div class="cn-body">
 							<h2>' . __( 'Success!', 'cookie-notice' ) . '</h2>
-							<div class="cn-lead"><p><b>' . __( 'You have successfully upgraded your website to Cookie Compliance&trade;', 'cookie-notice' ) . '</b></p><p>' . sprintf( __( 'Go to Cookie Compliance&trade; application now. Or access it anytime from your <a href="%s">Cookie Notice settings page</a>.', 'cookie-notice' ), esc_url( admin_url( 'options-general.php?page=cookie-notice' ) ) ) . '</p></div>
+							<div class="cn-lead"><p><b>' . __( 'You have successfully upgraded your website to Cookie Compliance&trade;', 'cookie-notice' ) . '</b></p><p>' . sprintf( __( 'Go to Cookie Compliance&trade; application now. Or access it anytime from your <a href="%s">Cookie Notice settings page</a>.', 'cookie-notice' ), esc_url( admin_url( 'admin.php?page=cookie-notice' ) ) ) . '</p></div>
 						</div>';
 			}
 
@@ -598,13 +596,13 @@ class Cookie_Notice_Welcome {
 			
 			switch ( $screen ) {
 				case 'about':
-					$html .= '<a href="' . esc_url( admin_url( 'options-general.php?page=cookie-notice' ) ) . '" class="cn-btn cn-btn-link cn-skip-button">' . __( 'Remind me later', 'cookie-notice' ) . '</a>';
+					$html .= '<a href="' . esc_url( admin_url( 'admin.php?page=cookie-notice' ) ) . '" class="cn-btn cn-btn-link cn-skip-button">' . __( 'Remind me later', 'cookie-notice' ) . '</a>';
 					break;
 				case 'success':
 					$html .= '<a href="' . esc_url( get_dashboard_url() ) . '" class="cn-btn cn-btn-link cn-skip-button">' . __( 'WordPress Dashboard', 'cookie-notice' ) . '</a>';
 					break;
 				default:
-					$html .= '<a href="' . esc_url( admin_url( 'options-general.php?page=cookie-notice' ) ) . '" class="cn-btn cn-btn-link cn-skip-button">' . __( 'Skip for now', 'cookie-notice' ) . '</a>';
+					$html .= '<a href="' . esc_url( admin_url( 'admin.php?page=cookie-notice' ) ) . '" class="cn-btn cn-btn-link cn-skip-button">' . __( 'Skip for now', 'cookie-notice' ) . '</a>';
 					break;
 			}
 			

@@ -210,7 +210,7 @@
 
 .cn-welcome-wrap .cn-flex-item ul {
 	padding: 0;
-	margin: 3em 0 0;
+	margin: 2em 0 0;
 	list-style: none;
 	font-size: 14px;
 }
@@ -927,7 +927,15 @@
 	background-color: rgba(32,193,158,.1);
 }
 
-.cn-welcome-wrap form .cn-plan-wrapper input:checked + span .cn-plan-description {
+.cn-welcome-wrap form .cn-plan-wrapper span .cn-plan-description {
+	font-weight: normal;
+}
+
+.cn-welcome-wrap form .cn-plan-wrapper span .cn-plan-description b {
+	font-weight: bold;
+}
+
+.cn-welcome-wrap form .cn-plan-wrapper input:checked + span {
 	color: #fff;
 }
 
@@ -938,11 +946,9 @@
 	color: #fff;
 }
 
-.cn-welcome-wrap form .cn-plan-price {
+.cn-welcome-wrap form .cn-plan-pricing {
 	display: inline-block;
 	font-size: 1.1em;
-	font-weight: bold;
-	color: #fff;
 	float: right;
 }
 
@@ -951,8 +957,8 @@
 	color: #20C19E;
 }
 
-.cn-welcome-wrap form .cn-plan-period {
-	font-weight: normal;
+.cn-welcome-wrap form .cn-plan-price {
+	font-weight: bold;
 }
 
 .cn-welcome-wrap form input::placeholder,
