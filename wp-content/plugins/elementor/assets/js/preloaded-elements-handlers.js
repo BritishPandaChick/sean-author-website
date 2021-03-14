@@ -1,4 +1,4 @@
-/*! elementor - v3.1.3 - 03-03-2021 */
+/*! elementor - v3.1.4 - 10-03-2021 */
 (self["webpackChunkelementor"] = self["webpackChunkelementor"] || []).push([["preloaded-elements-handlers"],{
 
 /***/ "../node_modules/@babel/runtime-corejs2/core-js/object/define-properties.js":
@@ -2296,13 +2296,20 @@ var Video = /*#__PURE__*/function (_elementorModules$fro) {
     value: function handleVideo() {
       var _this = this;
 
-      this.apiProvider.onApiReady(function (apiObject) {
-        if (!_this.getElementSettings('lightbox')) {
+      if (this.getElementSettings('lightbox')) {
+        return;
+      }
+
+      if ('youtube' === this.getElementSettings('video_type')) {
+        this.apiProvider.onApiReady(function (apiObject) {
           _this.elements.$imageOverlay.remove();
 
           _this.prepareYTVideo(apiObject, true);
-        }
-      });
+        });
+      } else {
+        this.elements.$imageOverlay.remove();
+        this.playVideo();
+      }
     }
   }, {
     key: "playVideo",
