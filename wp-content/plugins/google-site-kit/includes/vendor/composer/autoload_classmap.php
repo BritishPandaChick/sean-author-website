@@ -151,6 +151,8 @@ return array(
     'Google\\Site_Kit\\Modules\\Analytics\\Web_Tag' => $baseDir . '/Modules/Analytics/Web_Tag.php',
     'Google\\Site_Kit\\Modules\\Analytics_4' => $baseDir . '/Modules/Analytics_4.php',
     'Google\\Site_Kit\\Modules\\Analytics_4\\Settings' => $baseDir . '/Modules/Analytics_4/Settings.php',
+    'Google\\Site_Kit\\Modules\\Analytics_4\\Tag_Guard' => $baseDir . '/Modules/Analytics_4/Tag_Guard.php',
+    'Google\\Site_Kit\\Modules\\Analytics_4\\Web_Tag' => $baseDir . '/Modules/Analytics_4/Web_Tag.php',
     'Google\\Site_Kit\\Modules\\Optimize' => $baseDir . '/Modules/Optimize.php',
     'Google\\Site_Kit\\Modules\\Optimize\\Settings' => $baseDir . '/Modules/Optimize/Settings.php',
     'Google\\Site_Kit\\Modules\\PageSpeed_Insights' => $baseDir . '/Modules/PageSpeed_Insights.php',

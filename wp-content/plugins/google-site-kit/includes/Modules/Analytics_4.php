@@ -10,9 +10,14 @@
 
 namespace Google\Site_Kit\Modules;
 
+use Google\Site_Kit\Core\Assets\Asset;
+use Google\Site_Kit\Core\Assets\Script;
+use Google\Site_Kit\Core\Authentication\Clients\Google_Site_Kit_Client;
 use Google\Site_Kit\Core\Modules\Module;
 use Google\Site_Kit\Core\Modules\Module_Settings;
 use Google\Site_Kit\Core\Modules\Module_With_Debug_Fields;
+use Google\Site_Kit\Core\Modules\Module_With_Assets;
+use Google\Site_Kit\Core\Modules\Module_With_Assets_Trait;
 use Google\Site_Kit\Core\Modules\Module_With_Scopes;
 use Google\Site_Kit\Core\Modules\Module_With_Scopes_Trait;
 use Google\Site_Kit\Core\Modules\Module_With_Settings;
@@ -20,10 +25,14 @@ use Google\Site_Kit\Core\Modules\Module_With_Settings_Trait;
 use Google\Site_Kit\Core\Modules\Module_With_Owner;
 use Google\Site_Kit\Core\Modules\Module_With_Owner_Trait;
 use Google\Site_Kit\Core\REST_API\Exception\Invalid_Datapoint_Exception;
-use Google\Site_Kit\Core\Authentication\Clients\Google_Site_Kit_Client;
 use Google\Site_Kit\Core\REST_API\Data_Request;
+use Google\Site_Kit\Core\Tags\Guards\Tag_Verify_Guard;
 use Google\Site_Kit\Core\Util\Debug_Data;
+use Google\Site_Kit\Core\Util\Method_Proxy_Trait;
 use Google\Site_Kit\Modules\Analytics_4\Settings;
+use Google\Site_Kit\Modules\Analytics_4\Tag_Guard;
+use Google\Site_Kit\Modules\Analytics_4\Web_Tag;
+use Google\Site_Kit_Dependencies\Google\Model as Google_Model;
 use Google\Site_Kit_Dependencies\Google_Service_GoogleAnalyticsAdmin;
 use Google\Site_Kit_Dependencies\Google_Service_GoogleAnalyticsAdmin_GoogleAnalyticsAdminV1alphaProperty;
 use Google\Site_Kit_Dependencies\Google_Service_GoogleAnalyticsAdmin_GoogleAnalyticsAdminV1alphaWebDataStream;
@@ -38,10 +47,17 @@ use WP_Error;
  * @ignore
  */
 final class Analytics_4 extends Module
-	implements Module_With_Scopes, Module_With_Settings, Module_With_Debug_Fields, Module_With_Owner {
+	implements Module_With_Scopes, Module_With_Settings, Module_With_Debug_Fields, Module_With_Owner, Module_With_Assets {
+	use Method_Proxy_Trait;
+	use Module_With_Assets_Trait;
 	use Module_With_Owner_Trait;
 	use Module_With_Scopes_Trait;
 	use Module_With_Settings_Trait;
+
+	/**
+	 * Module slug name.
+	 */
+	const MODULE_SLUG = 'analytics-4';
 
 	/**
 	 * Registers functionality through WordPress hooks.
@@ -50,6 +66,9 @@ final class Analytics_4 extends Module
 	 */
 	public function register() {
 		$this->register_scopes_hook();
+
+		// Analytics 4 tag placement logic.
+		add_action( 'template_redirect', $this->get_method_proxy( 'register_tag' ) );
 	}
 
 	/**
@@ -161,6 +180,7 @@ final class Analytics_4 extends Module
 				'request_scopes_message' => __( 'You’ll need to grant Site Kit permission to create a new Analytics 4 web data stream on your behalf.', 'google-site-kit' ),
 			),
 			'GET:properties'            => array( 'service' => 'analyticsadmin' ),
+			'GET:property'              => array( 'service' => 'analyticsadmin' ),
 			'GET:webdatastreams'        => array( 'service' => 'analyticsadmin' ),
 		);
 	}
@@ -188,9 +208,11 @@ final class Analytics_4 extends Module
 						array( 'status' => 400 )
 					);
 				}
+
 				$property = new Google_Service_GoogleAnalyticsAdmin_GoogleAnalyticsAdminV1alphaProperty();
-				$property->setParent( 'accounts/' . $data['accountID'] );
+				$property->setParent( self::normalize_account_id( $data['accountID'] ) );
 				$property->setDisplayName( wp_parse_url( $this->context->get_reference_site_url(), PHP_URL_HOST ) );
+
 				return $this->get_service( 'analyticsadmin' )->properties->create( $property );
 			case 'POST:create-webdatastream':
 				if ( ! isset( $data['propertyID'] ) ) {
@@ -201,10 +223,12 @@ final class Analytics_4 extends Module
 						array( 'status' => 400 )
 					);
 				}
+
 				$datastream = new Google_Service_GoogleAnalyticsAdmin_GoogleAnalyticsAdminV1alphaWebDataStream();
 				$datastream->setDisplayName( wp_parse_url( $this->context->get_reference_site_url(), PHP_URL_HOST ) );
 				$datastream->setDefaultUri( $this->context->get_reference_site_url() );
-				return $this->get_service( 'analyticsadmin' )->properties_webDataStreams->create( 'properties/' . $data['propertyID'], $datastream );
+
+				return $this->get_service( 'analyticsadmin' )->properties_webDataStreams->create( self::normalize_property_id( $data['propertyID'] ), $datastream );
 			case 'GET:properties':
 				if ( ! isset( $data['accountID'] ) ) {
 					return new WP_Error(
@@ -214,11 +238,23 @@ final class Analytics_4 extends Module
 						array( 'status' => 400 )
 					);
 				}
+
 				return $this->get_service( 'analyticsadmin' )->properties->listProperties(
 					array(
-						'filter' => 'parent:accounts/' . $data['accountID'],
+						'filter' => 'parent:' . self::normalize_account_id( $data['accountID'] ),
 					)
 				);
+			case 'GET:property':
+				if ( ! isset( $data['propertyID'] ) ) {
+					return new WP_Error(
+						'missing_required_param',
+						/* translators: %s: Missing parameter name */
+						sprintf( __( 'Request parameter is empty: %s.', 'google-site-kit' ), 'propertyID' ),
+						array( 'status' => 400 )
+					);
+				}
+
+				return $this->get_service( 'analyticsadmin' )->properties->get( self::normalize_property_id( $data['propertyID'] ) );
 			case 'GET:webdatastreams':
 				if ( ! isset( $data['propertyID'] ) ) {
 					return new WP_Error(
@@ -228,7 +264,8 @@ final class Analytics_4 extends Module
 						array( 'status' => 400 )
 					);
 				}
-				return $this->get_service( 'analyticsadmin' )->properties_webDataStreams->listPropertiesWebDataStreams( 'properties/' . $data['propertyID'] );
+
+				return $this->get_service( 'analyticsadmin' )->properties_webDataStreams->listPropertiesWebDataStreams( self::normalize_property_id( $data['propertyID'] ) );
 		}
 
 		return parent::create_data_request( $data );
@@ -247,11 +284,17 @@ final class Analytics_4 extends Module
 	protected function parse_data_response( Data_Request $data, $response ) {
 		switch ( "{$data->method}:{$data->datapoint}" ) {
 			case 'GET:accounts':
-				return $response->getAccounts();
+				return array_map( array( self::class, 'filter_account_with_ids' ), $response->getAccounts() );
+			case 'POST:create-property':
+				return self::filter_property_with_ids( $response );
+			case 'POST:create-webdatastream':
+				return self::filter_webdatastream_with_ids( $response );
 			case 'GET:properties':
-				return $response->getProperties();
+				return array_map( array( self::class, 'filter_property_with_ids' ), $response->getProperties() );
+			case 'GET:property':
+				return self::filter_property_with_ids( $response );
 			case 'GET:webdatastreams':
-				return $response->getWebDataStreams();
+				return array_map( array( self::class, 'filter_webdatastream_with_ids' ), $response->getWebDataStreams() );
 		}
 
 		return parent::parse_data_response( $data, $response );
@@ -266,7 +309,7 @@ final class Analytics_4 extends Module
 	 */
 	protected function setup_info() {
 		return array(
-			'slug'        => 'analytics-4',
+			'slug'        => self::MODULE_SLUG,
 			'name'        => _x( 'Analytics 4 (Alpha)', 'Service name', 'google-site-kit' ),
 			'description' => __( 'Get a deeper understanding of your customers. Google Analytics gives you the free tools you need to analyze data for your business in one place.', 'google-site-kit' ),
 			'cta'         => __( 'Get to know your customers.', 'google-site-kit' ),
@@ -305,4 +348,142 @@ final class Analytics_4 extends Module
 	protected function setup_settings() {
 		return new Settings( $this->options );
 	}
+
+	/**
+	 * Sets up the module's assets to register.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @return Asset[] List of Asset objects.
+	 */
+	protected function setup_assets() {
+		$base_url = $this->context->url( 'dist/assets/' );
+
+		return array(
+			new Script(
+				'googlesitekit-modules-analytics-4',
+				array(
+					'src'          => $base_url . 'js/googlesitekit-modules-analytics-4.js',
+					'dependencies' => array(
+						'googlesitekit-vendor',
+						'googlesitekit-api',
+						'googlesitekit-data',
+						'googlesitekit-modules',
+						'googlesitekit-datastore-site',
+						'googlesitekit-datastore-forms',
+					),
+				)
+			),
+		);
+	}
+
+	/**
+	 * Registers the Analytics 4 tag.
+	 *
+	 * @since 1.31.0
+	 */
+	private function register_tag() {
+		if ( $this->context->is_amp() ) {
+			return;
+		}
+
+		$module_settings = $this->get_settings();
+		$settings        = $module_settings->get();
+		$tag             = new Web_Tag( $settings['measurementID'], self::MODULE_SLUG );
+		if ( $tag && ! $tag->is_tag_blocked() ) {
+			$tag->use_guard( new Tag_Verify_Guard( $this->context->input() ) );
+			$tag->use_guard( new Tag_Guard( $module_settings ) );
+			if ( $tag->can_register() ) {
+				$tag->register();
+			}
+		}
+	}
+
+	/**
+	 * Parses account ID, adds it to the model object and returns updated model.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param Google_Model $account Account model.
+	 * @return \stdClass Updated model with _id attribute.
+	 */
+	public static function filter_account_with_ids( $account ) {
+		$obj = $account->toSimpleObject();
+
+		$matches = array();
+		if ( preg_match( '#accounts/([^/]+)#', $account['name'], $matches ) ) {
+			$obj->_id = $matches[1];
+		}
+
+		return $obj;
+	}
+
+	/**
+	 * Parses account and property IDs, adds it to the model object and returns updated model.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param Google_Model $property Property model.
+	 * @return \stdClass Updated model with _id and _accountID attributes.
+	 */
+	public static function filter_property_with_ids( $property ) {
+		$obj = $property->toSimpleObject();
+
+		$matches = array();
+		if ( preg_match( '#properties/([^/]+)#', $property['name'], $matches ) ) {
+			$obj->_id = $matches[1];
+		}
+
+		$matches = array();
+		if ( preg_match( '#accounts/([^/]+)#', $property['parent'], $matches ) ) {
+			$obj->_accountID = $matches[1]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		}
+
+		return $obj;
+	}
+
+	/**
+	 * Parses property and web datastream IDs, adds it to the model object and returns updated model.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param Google_Model $webdatastream Web datastream model.
+	 * @return \stdClass Updated model with _id and _propertyID attributes.
+	 */
+	public static function filter_webdatastream_with_ids( $webdatastream ) {
+		$obj = $webdatastream->toSimpleObject();
+
+		$matches = array();
+		if ( preg_match( '#properties/([^/]+)/webDataStreams/([^/]+)#', $webdatastream['name'], $matches ) ) {
+			$obj->_id         = $matches[2];
+			$obj->_propertyID = $matches[1]; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		}
+
+		return $obj;
+	}
+
+	/**
+	 * Normalizes account ID and returns it.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param string $account_id Account ID.
+	 * @return string Updated account ID with "accounts/" prefix.
+	 */
+	public static function normalize_account_id( $account_id ) {
+		return 'accounts/' . $account_id;
+	}
+
+	/**
+	 * Normalizes property ID and returns it.
+	 *
+	 * @since 1.31.0
+	 *
+	 * @param string $property_id Property ID.
+	 * @return string Updated property ID with "properties/" prefix.
+	 */
+	public static function normalize_property_id( $property_id ) {
+		return 'properties/' . $property_id;
+	}
+
 }
