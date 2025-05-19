@@ -5934,7 +5934,7 @@ $this->rules[818] = wfWAFRule::create($this, 818, NULL, 'rce', '100', 'WAF-RULE-
 )),
 wfWAFRuleComparisonSubject::create($this, array('request.queryString', 'action'), array (
 ))))));
-$this->rules[819] = wfWAFRule::create($this, 819, NULL, 'insufficient-auth', '100', 'WAF-RULE-819', 0, 'block', new wfWAFRuleComparisonGroup(new wfWAFRuleComparisonGroup(new wfWAFRuleComparison($this, 'match', '/wp-json[\\/]+sure-triggers[\\/]+v1[\\/]+automation/i', array(wfWAFRuleComparisonSubject::create($this, 'request.path', array (
+$this->rules[819] = wfWAFRule::create($this, 819, NULL, 'insufficient-auth', '100', 'SureTriggers <= 1.0.78 - Authorization Bypass due to Missing Empty Value Check to Unauthenticated Administrative User Creation', 0, 'block', new wfWAFRuleComparisonGroup(new wfWAFRuleComparisonGroup(new wfWAFRuleComparison($this, 'match', '/wp-json[\\/]+sure-triggers[\\/]+v1[\\/]+automation/i', array(wfWAFRuleComparisonSubject::create($this, 'request.path', array (
 )))), new wfWAFRuleLogicalOperator('OR'), new wfWAFRuleComparison($this, 'match', '/sure-triggers[\\/]+v1[\\/]+automation/i', array(wfWAFRuleComparisonSubject::create($this, array('request.body', 'rest_route'), array (
 )),
 wfWAFRuleComparisonSubject::create($this, array('request.queryString', 'rest_route'), array (
